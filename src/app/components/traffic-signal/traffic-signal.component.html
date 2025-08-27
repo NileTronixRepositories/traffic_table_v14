@@ -117,66 +117,37 @@
     [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
   >
     <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
-    <p class="fs-6 text-center">اتجاه الإشارة: {{ popupData?.name }}</p>
 
     <div class="status-columns">
-      <div class="status-columns">
-        <!-- العمود الأول -->
-        <div class="status-col">
-          <h5>اتجاه الإشارة: {{ popupData?.name }}</h5>
-          <div class="status-box red" [class.active]="currentStatus === 'RED'">
-            <span class="counter" *ngIf="currentStatus === 'RED'">{{
-              counters.RED
-            }}</span>
-            🔴
-          </div>
-          <div
-            class="status-box green"
-            [class.active]="currentStatus === 'GREEN'"
-          >
-            <span class="counter" *ngIf="currentStatus === 'GREEN'">{{
-              counters.GREEN
-            }}</span>
-            🟢
-          </div>
-          <div
-            class="status-box yellow"
-            [class.active]="currentStatus === 'YELLOW'"
-          >
-            <span class="counter" *ngIf="currentStatus === 'YELLOW'">{{
-              counters.YELLOW
-            }}</span>
-            🟡
-          </div>
+      <!-- L1 -->
+      <div class="status-col">
+        <h5>L1</h5>
+        <div
+          *ngFor="let color of signalColors"
+          class="status-box"
+          [ngClass]="color.toLowerCase()"
+          [class.active]="popupData?.L1 === color"
+        >
+          <span class="counter" *ngIf="popupData?.L1 === color">
+            {{ popupData?.T }}
+          </span>
+          {{ getEmoji(color) }}
         </div>
+      </div>
 
-        <!-- العمود التاني (العكس) -->
-        <div class="status-col">
-          <h5>اتجاه الإشارة: {{ popupData?.name }}</h5>
-          <div class="status-box red" [class.active]="oppositeStatus === 'RED'">
-            <span class="counter" *ngIf="oppositeStatus === 'RED'">{{
-              counters[currentStatus]
-            }}</span>
-            🔴
-          </div>
-          <div
-            class="status-box green"
-            [class.active]="oppositeStatus === 'GREEN'"
-          >
-            <span class="counter" *ngIf="oppositeStatus === 'GREEN'">{{
-              counters[currentStatus]
-            }}</span>
-            🟢
-          </div>
-          <div
-            class="status-box yellow"
-            [class.active]="oppositeStatus === 'YELLOW'"
-          >
-            <span class="counter" *ngIf="oppositeStatus === 'YELLOW'">{{
-              counters[currentStatus]
-            }}</span>
-            🟡
-          </div>
+      <!-- L2 -->
+      <div class="status-col">
+        <h5>L2</h5>
+        <div
+          *ngFor="let color of signalColors"
+          class="status-box"
+          [ngClass]="color.toLowerCase()"
+          [class.active]="popupData?.L2 === color"
+        >
+          <span class="counter" *ngIf="popupData?.L2 === color">
+            {{ popupData?.T }}
+          </span>
+          {{ getEmoji(color) }}
         </div>
       </div>
     </div>
@@ -207,7 +178,7 @@
   </div>
 </div>
 
-<div style="padding:16px">
+<div style="padding: 16px">
   <h2>SignalR 2.x (jQuery) — Angular 14 V1</h2>
 
   <button (click)="sendTest()">Send Test Message</button>

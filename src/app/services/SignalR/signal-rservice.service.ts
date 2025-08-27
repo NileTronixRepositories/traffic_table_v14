@@ -1,32 +1,52 @@
 import { Injectable, NgZone } from '@angular/core';
-import { Subject, timer } from 'rxjs';
-
-
+import { map, Subject, timer } from 'rxjs';
+import { UnitAction } from 'src/app/components/traffic-signal/traffic-signal.component';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SignalRServiceService {
-
- private connection: any;
+  private connection: any;
   private hub: any;
 
-private readonly baseUrl = 'http://197.168.209.50/TLC';
-// private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
-  private readonly hubName = 'messageHub';           // MessageHub -> "messageHub"
+  private readonly baseUrl = 'http://197.168.209.50/TLC';
+  // private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
+  private readonly hubName = 'messageHub'; // MessageHub -> "messageHub"
 
   private starting = false;
   private connected = false;
 
-  private backoffMs = 1000;          // 1s
+  private backoffMs = 1000; // 1s
   private readonly maxBackoffMs = 10000; // 10s
 
   // Streams
   private messagesSub = new Subject<{ name: string; message: string }>();
   messages$ = this.messagesSub.asObservable();
 
-  private unitActionsSub = new Subject<{ roomId: string; actionId: string; operatorData: string }>();
-  unitActions$ = this.unitActionsSub.asObservable();
+  private unitActionsSub = new Subject<{
+    roomId: string;
+    actionId: string;
+    operatorData: string;
+  }>();
+
+  unitActions$ = this.unitActionsSub.asObservable().pipe(
+    map(({ roomId, actionId, operatorData }) => {
+      let parsed: any;
+      try {
+        parsed = JSON.parse(operatorData);
+      } catch (e) {
+        console.error('❌ Error parsing operatorData:', operatorData, e);
+        return null;
+      }
+
+      return {
+        id: actionId,
+        L1: parsed.L1 as 'RED' | 'GREEN' | 'YELLOW',
+        L2: parsed.L2 as 'RED' | 'GREEN' | 'YELLOW',
+        T: parsed.T as number,
+      } as UnitAction;
+    })
+  );
 
   constructor(private zone: NgZone) {
     this.init();
@@ -35,7 +55,9 @@ private readonly baseUrl = 'http://197.168.209.50/TLC';
   private init() {
     const $any = (window as any).$;
     if (!$any || !$any.hubConnection) {
-      console.error('jQuery/SignalR not found. Check scripts order in index.html');
+      console.error(
+        'jQuery/SignalR not found. Check scripts order in index.html'
+      );
       return;
     }
 
@@ -48,9 +70,14 @@ private readonly baseUrl = 'http://197.168.209.50/TLC';
       this.zone.run(() => this.messagesSub.next({ name, message }));
     });
 
-    this.hub.on('ReceiveUnitAction', (roomId: string, actionId: string, operatorData: string) => {
-      this.zone.run(() => this.unitActionsSub.next({ roomId, actionId, operatorData }));
-    });
+    this.hub.on(
+      'ReceiveUnitAction',
+      (roomId: string, actionId: string, operatorData: string) => {
+        this.zone.run(() =>
+          this.unitActionsSub.next({ roomId, actionId, operatorData })
+        );
+      }
+    );
 
     // 3) State
     this.connection.stateChanged((chg: any) => {
@@ -64,12 +91,14 @@ private readonly baseUrl = 'http://197.168.209.50/TLC';
 
   /** يبدأ الاتصال مع إعادة المحاولة (exponential backoff) */
   start(): Promise<void> {
-    if (this.starting || this.connected || !this.connection) return Promise.resolve();
+    if (this.starting || this.connected || !this.connection)
+      return Promise.resolve();
     this.starting = true;
 
     return new Promise<void>((resolve) => {
       const tryStart = () => {
-        this.connection.start()
+        this.connection
+          .start()
           .done(() => {
             this.starting = false;
             this.connected = true;
@@ -94,21 +123,24 @@ private readonly baseUrl = 'http://197.168.209.50/TLC';
   /** يرسل رسالة إلى الهَب (ينادي SendMessage على السيرفر) */
   sendMessage(user: string, message: string) {
     if (!this.hub) return;
-    this.hub.invoke('SendMessage', user, message)
+    this.hub
+      .invoke('SendMessage', user, message)
       .fail((e: any) => console.error('SendMessage failed', e));
   }
 
   /** يرسل UnitAction (ينادي SendUnitAction على السيرفر) */
   sendUnitAction(roomId: string, actionId: string, operatorData: string) {
     if (!this.hub) return;
-    this.hub.invoke('SendUnitAction', roomId, actionId, operatorData)
+    this.hub
+      .invoke('SendUnitAction', roomId, actionId, operatorData)
       .fail((e: any) => console.error('SendUnitAction failed', e));
   }
 
   /** انضمام لجروب */
   join(groupName: string) {
     if (!this.hub) return;
-    this.hub.invoke('Join', groupName)
+    this.hub
+      .invoke('Join', groupName)
       .fail((e: any) => console.error('Join failed', e));
   }
 }
