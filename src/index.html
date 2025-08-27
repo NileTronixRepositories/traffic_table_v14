@@ -6,8 +6,17 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
+</head> 
+
 <body>
+  <!-- 1) jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- 2) Classic SignalR 2.x client (jquery.signalR.js) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/2.4.3/jquery.signalR.min.js"></script>
+
+<!-- 3) الـ hubs auto-generated من السيرفر الكلاسيك -->
+<script src="http://197.168.209.50/signalr/hubs"></script>
   <app-root></app-root>
 </body>
 </html>
