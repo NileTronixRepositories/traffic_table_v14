@@ -1,0 +1,208 @@
+<div class="container-fluid">
+  <div class="header">
+    <h1 class="title">Traffic Signal Management</h1>
+    <div class="search-container">
+      <div class="search-box">
+        <i class="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name or ID..."
+          [(ngModel)]="searchTerm"
+        />
+      </div>
+
+      <div class="filter-dropdown status-filter-dropdown">
+        <button class="filter-button" (click)="toggleStatusFilterDropdown()">
+          <i class="fas fa-filter"></i>
+          Status Filter
+          <i class="fas fa-chevron-down" [class.rotated]="showStatusFilter"></i>
+        </button>
+        <div class="filter-menu" [class.show]="showStatusFilter">
+          <div class="filter-option" (click)="toggleAllStatusFilters()">
+            <span class="checkmark">{{
+              allStatusSelected ? "✓" : someStatusSelected ? "–" : ""
+            }}</span>
+            <span>Filter All</span>
+          </div>
+          <div class="filter-divider"></div>
+          <div
+            class="filter-option"
+            *ngFor="let status of ['RED', 'GREEN', 'YELLOW']"
+            (click)="toggleStatusFilter(status)"
+          >
+            <span
+              class="status-dot"
+              [style.background]="statusColors[status]"
+            ></span>
+            <span>{{ status }}</span>
+            <span class="checkmark">{{ statusFilter[status] ? "✓" : "" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-dropdown active-filter-dropdown">
+        <button class="filter-button" (click)="toggleActiveFilterDropdown()">
+          <i class="fas fa-power-off"></i>
+          Active Filter
+          <i class="fas fa-chevron-down" [class.rotated]="showActiveFilter"></i>
+        </button>
+        <div class="filter-menu" [class.show]="showActiveFilter">
+          <div class="filter-option" (click)="activeFilter = 'ALL'">
+            <span>All</span>
+            <span class="checkmark">{{
+              activeFilter === "ALL" ? "✓" : ""
+            }}</span>
+          </div>
+          <div class="filter-option" (click)="activeFilter = 'ACTIVE'">
+            <span>Active Only</span>
+            <span class="checkmark">{{
+              activeFilter === "ACTIVE" ? "✓" : ""
+            }}</span>
+          </div>
+          <div class="filter-option" (click)="activeFilter = 'INACTIVE'">
+            <span>Inactive Only</span>
+            <span class="checkmark">{{
+              activeFilter === "INACTIVE" ? "✓" : ""
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <table class="traffic-table">
+    <thead>
+      <tr>
+        <th *ngFor="let header of tableHeaders">{{ header }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let traffic of paginatedTraffics"
+        (mouseenter)="showPopup(traffic, $event)"
+        (mousemove)="movePopup($event)"
+        (mouseleave)="hidePopup()"
+      >
+        <td>{{ traffic.id }}</td>
+        <td>{{ traffic.ipAddress }}</td>
+        <td>{{ traffic.name }}</td>
+        <td>
+          <span [ngClass]="traffic.active ? 'active' : 'inactive'">
+            {{ traffic.active ? activeLabel : inactiveLabel }}
+          </span>
+        </td>
+        <!-- <td>
+          <span
+            class="status-dot"
+            [style.background]="statusColors[traffic.status]"
+            [title]="traffic.status"
+          ></span>
+          {{ traffic.status }}
+        </td> -->
+      </tr>
+
+      <tr *ngIf="paginatedTraffics.length === 0">
+        <td colspan="5" class="no-results">
+          No traffic signals found matching your criteria
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- popup -->
+  <div
+    class="traffic-popup"
+    *ngIf="popupVisible"
+    [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
+  >
+    <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
+    <p class="fs-6 text-center">اتجاه الإشارة: {{ popupData?.name }}</p>
+
+    <div class="status-columns">
+      <div class="status-columns">
+        <!-- العمود الأول -->
+        <div class="status-col">
+          <h5>اتجاه الإشارة: {{ popupData?.name }}</h5>
+          <div class="status-box red" [class.active]="currentStatus === 'RED'">
+            <span class="counter" *ngIf="currentStatus === 'RED'">{{
+              counters.RED
+            }}</span>
+            🔴
+          </div>
+          <div
+            class="status-box green"
+            [class.active]="currentStatus === 'GREEN'"
+          >
+            <span class="counter" *ngIf="currentStatus === 'GREEN'">{{
+              counters.GREEN
+            }}</span>
+            🟢
+          </div>
+          <div
+            class="status-box yellow"
+            [class.active]="currentStatus === 'YELLOW'"
+          >
+            <span class="counter" *ngIf="currentStatus === 'YELLOW'">{{
+              counters.YELLOW
+            }}</span>
+            🟡
+          </div>
+        </div>
+
+        <!-- العمود التاني (العكس) -->
+        <div class="status-col">
+          <h5>اتجاه الإشارة: {{ popupData?.name }}</h5>
+          <div class="status-box red" [class.active]="oppositeStatus === 'RED'">
+            <span class="counter" *ngIf="oppositeStatus === 'RED'">{{
+              counters[currentStatus]
+            }}</span>
+            🔴
+          </div>
+          <div
+            class="status-box green"
+            [class.active]="oppositeStatus === 'GREEN'"
+          >
+            <span class="counter" *ngIf="oppositeStatus === 'GREEN'">{{
+              counters[currentStatus]
+            }}</span>
+            🟢
+          </div>
+          <div
+            class="status-box yellow"
+            [class.active]="oppositeStatus === 'YELLOW'"
+          >
+            <span class="counter" *ngIf="oppositeStatus === 'YELLOW'">{{
+              counters[currentStatus]
+            }}</span>
+            🟡
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>
+      Showing {{ paginatedTraffics.length }} of
+      {{ filteredTraffics.length }} traffic signals
+    </p>
+    <div class="pagination">
+      <button
+        class="prev-btn"
+        (click)="prevPage()"
+        [disabled]="currentPage === 1"
+      >
+        Previous
+      </button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button
+        class="next-btn"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>

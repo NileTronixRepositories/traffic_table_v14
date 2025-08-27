@@ -3,7 +3,9 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+
+  signalRUrl: 'http://197.168.209.50/TLC/signalr',
 };
 
 /*
