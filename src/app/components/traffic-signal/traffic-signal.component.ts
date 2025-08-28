@@ -1,5 +1,6 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { SignalRServiceService } from 'src/app/services/SignalR/signal-rservice.service';
+import { TrafficLog } from 'src/types/signalr';
 
 export interface Traffic {
   id: number;
@@ -34,7 +35,8 @@ declare var $: any;
 })
 export class TrafficSignalComponent implements OnInit, OnDestroy {
   lastMsg?: any;
-  lastAction?: any;
+  lastAction?: any; 
+  parsed:TrafficLog ={} as TrafficLog // Real Value 
 
   constructor(private signalR: SignalRServiceService) {}
 
@@ -270,6 +272,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.signalR.unitActions$.subscribe((action: UnitAction | null) => {
+      console.log(action)
       if (!action) return;
 
       const traffic = this.traffics.find((t) => t.id === Number(action.id));
@@ -282,9 +285,20 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
         if (this.popupData?.id === traffic.id) {
           this.popupData = { ...traffic };
           this.startCounter();
+          console.log()
         }
       }
-    });
+    }); 
+    this.signalR.messages$.subscribe((msg)=>
+    {
+ 
+    this.parsed = JSON.parse(msg.message);
+   console.log(this.parsed.L1)
+   console.log(this.parsed.L2)
+   console.log(this.parsed.T)
+
+    })
+
   }
 
   ngOnDestroy() {

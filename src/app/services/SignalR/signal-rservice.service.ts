@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { map, Subject, timer } from 'rxjs';
 import { UnitAction } from 'src/app/components/traffic-signal/traffic-signal.component';
+import { TrafficLog } from 'src/types/signalr';
 
 @Injectable({
   providedIn: 'root',
@@ -9,8 +10,8 @@ export class SignalRServiceService {
   private connection: any;
   private hub: any;
 
-  private readonly baseUrl = 'http://197.168.209.50/TLC';
-  // private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
+//  private readonly baseUrl = 'http://197.168.209.50/TLC';
+   private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
   private readonly hubName = 'messageHub'; // MessageHub -> "messageHub"
 
   private starting = false;
