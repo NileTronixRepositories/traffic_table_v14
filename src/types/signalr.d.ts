@@ -6,3 +6,11 @@ interface JQueryStatic {
 }
 
 declare var $: JQueryStatic;
+
+export interface TrafficLog
+{
+L1 : string  , 
+T : number , 
+L2 : string
+
+}
