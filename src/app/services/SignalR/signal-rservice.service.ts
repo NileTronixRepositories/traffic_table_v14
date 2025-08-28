@@ -10,8 +10,8 @@ export class SignalRServiceService {
   private connection: any;
   private hub: any;
 
-//  private readonly baseUrl = 'http://197.168.209.50/TLC';
-   private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
+ private readonly baseUrl = 'http://197.168.209.50/TLC';
+  //private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
   private readonly hubName = 'messageHub'; // MessageHub -> "messageHub"
 
   private starting = false;

@@ -291,11 +291,11 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
     }); 
     this.signalR.messages$.subscribe((msg)=>
     {
- 
-    this.parsed = JSON.parse(msg.message);
+  this.parsed = JSON.parse(msg.message);
    console.log(this.parsed.L1)
    console.log(this.parsed.L2)
    console.log(this.parsed.T)
+   console.log(this.parsed.IpAdress)
 
     })
 
