@@ -25,9 +25,11 @@ export class SignalRServiceService {
           Latitude: item.Latitude?.trim() || null,
           Longitude: item.Longitude?.trim() || null,
           ipAddress: item.IpAddress,
-          status: 'RED',
+          status: '',
           active: true,
-          // You can add AreaId if needed: areaId: item.AreaId
+          L1: '',
+          L2: '',
+          T: 0,
         }))
       )
     );
@@ -67,8 +69,8 @@ export class SignalRServiceService {
 
       return {
         id: actionId,
-        L1: parsed.L1 as 'RED' | 'GREEN' | 'YELLOW',
-        L2: parsed.L2 as 'RED' | 'GREEN' | 'YELLOW',
+        L1: parsed.L1 as 'R' | 'G' | 'Y',
+        L2: parsed.L2 as 'R' | 'G' | 'Y',
         T: parsed.T as number,
       } as UnitAction;
     })

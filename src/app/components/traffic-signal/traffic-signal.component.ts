@@ -6,19 +6,19 @@ export interface Traffic {
   id: number;
   ipAddress?: string;
   name: string;
-  status?: 'RED' | 'GREEN' | 'YELLOW';
+  status?: 'R' | 'G' | 'Y';
   active?: boolean;
-  L1?: 'RED' | 'GREEN' | 'YELLOW';
+  L1?: 'R' | 'G' | 'Y';
   T?: number;
-  L2?: 'RED' | 'GREEN' | 'YELLOW';
+  L2?: 'R' | 'G' | 'Y';
   Latitude?: string | null;
   Longitude?: string | null;
 }
 
 export interface UnitAction {
   id: string;
-  L1: 'RED' | 'GREEN' | 'YELLOW';
-  L2: 'RED' | 'GREEN' | 'YELLOW';
+  L1: 'R' | 'G' | 'Y';
+  L2: 'R' | 'G' | 'Y';
   T: number;
 }
 
@@ -109,7 +109,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
         name: item.Name,
         Latitude: item.Latitude,
         Longitude: item.Longitude,
-        status: 'RED',
+        status: 'R',
         active: true,
       }));
     });
@@ -117,12 +117,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
     this.signalR.getControlBoxes().subscribe((data) => {
       this.traffics = data.map((item: any) => ({
         ...item,
-        status:
-          item.status === 'RED' ||
-          item.status === 'GREEN' ||
-          item.status === 'YELLOW'
-            ? item.status
-            : 'RED',
+        status: item.status ?? 'R',
       }));
     });
   }
@@ -174,7 +169,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
   private resetCounters() {
     this.counters = { RED: 0, GREEN: 0, YELLOW: 0 };
     if (this.popupData && this.popupData.status)
-      this.counters[this.popupData.status] = this.duration;
+      this.counters[this.mapSignalColor(this.popupData.status)] = this.duration;
   }
 
   startCounter() {
@@ -233,7 +228,8 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
       const matchesSearch =
         traffic.name?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         traffic.id.toString().includes(this.searchTerm);
-      const matchesStatus = this.statusFilter[traffic.status ?? 'RED'];
+      const mappedStatus = this.mapSignalColor(traffic.status);
+      const matchesStatus = this.statusFilter[mappedStatus];
       const matchesActive =
         this.activeFilter === 'ALL' ||
         (this.activeFilter === 'ACTIVE' && traffic.active) ||
@@ -303,5 +299,20 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
 
   sendTest() {
     this.signalR.sendMessage('Client', 'Hello from Angular 14!');
+  }
+
+  mapSignalColor(
+    color: 'R' | 'G' | 'Y' | undefined
+  ): 'RED' | 'GREEN' | 'YELLOW' {
+    switch (color) {
+      case 'R':
+        return 'RED';
+      case 'G':
+        return 'GREEN';
+      case 'Y':
+        return 'YELLOW';
+      default:
+        return 'RED';
+    }
   }
 }

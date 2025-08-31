@@ -124,9 +124,9 @@
           *ngFor="let color of signalColors"
           class="status-box"
           [ngClass]="color.toLowerCase()"
-          [class.active]="popupData?.L1 === color"
+          [class.active]="mapSignalColor(popupData?.L1) === color"
         >
-          <span class="counter" *ngIf="popupData?.L1 === color">
+          <span class="counter" *ngIf="mapSignalColor(popupData?.L1) === color">
             {{ popupData?.T }}
           </span>
           {{ getEmoji(color) }}
@@ -138,9 +138,9 @@
           *ngFor="let color of signalColors"
           class="status-box"
           [ngClass]="color.toLowerCase()"
-          [class.active]="popupData?.L2 === color"
+          [class.active]="mapSignalColor(popupData?.L2) === color"
         >
-          <span class="counter" *ngIf="popupData?.L2 === color">
+          <span class="counter" *ngIf="mapSignalColor(popupData?.L2) === color">
             {{ popupData?.T }}
           </span>
           {{ getEmoji(color) }}
