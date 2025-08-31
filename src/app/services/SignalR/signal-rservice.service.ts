@@ -1,4 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { map, Subject, timer } from 'rxjs';
 import { UnitAction } from 'src/app/components/traffic-signal/traffic-signal.component';
 import { TrafficLog } from 'src/types/signalr';
@@ -7,12 +8,36 @@ import { TrafficLog } from 'src/types/signalr';
   providedIn: 'root',
 })
 export class SignalRServiceService {
+  constructor(private zone: NgZone, private http: HttpClient) {
+    this.init();
+  }
+
+  getGovernorates() {
+    return this.http.get<any[]>('/api/get/control-box');
+  }
+
+  getControlBoxes() {
+    return this.http.get<any[]>('/api/get/control-box').pipe(
+      map((data) =>
+        data.map((item) => ({
+          id: item.ID,
+          name: item.Name,
+          Latitude: item.Latitude?.trim() || null,
+          Longitude: item.Longitude?.trim() || null,
+          ipAddress: item.IpAddress,
+          status: 'RED',
+          active: true,
+          // You can add AreaId if needed: areaId: item.AreaId
+        }))
+      )
+    );
+  }
   private connection: any;
   private hub: any;
 
- private readonly baseUrl = 'http://197.168.209.50/TLC';
+  private readonly baseUrl = 'http://197.168.209.50/TLC';
   //private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
-  private readonly hubName = 'messageHub'; // MessageHub -> "messageHub"
+  private readonly hubName = 'messageHub';
 
   private starting = false;
   private connected = false;
@@ -48,10 +73,6 @@ export class SignalRServiceService {
       } as UnitAction;
     })
   );
-
-  constructor(private zone: NgZone) {
-    this.init();
-  }
 
   private init() {
     const $any = (window as any).$;

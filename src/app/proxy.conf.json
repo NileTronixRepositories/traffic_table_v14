@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "http://197.168.209.50/TLC",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

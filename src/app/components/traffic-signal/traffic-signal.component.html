@@ -20,15 +20,15 @@
         </button>
         <div class="filter-menu" [class.show]="showStatusFilter">
           <div class="filter-option" (click)="toggleAllStatusFilters()">
-            <span class="checkmark">{{
-              allStatusSelected ? "✓" : someStatusSelected ? "–" : ""
-            }}</span>
+            <span class="checkmark">
+              {{ allStatusSelected ? "✓" : someStatusSelected ? "–" : "" }}
+            </span>
             <span>Filter All</span>
           </div>
           <div class="filter-divider"></div>
           <div
             class="filter-option"
-            *ngFor="let status of ['RED', 'GREEN', 'YELLOW']"
+            *ngFor="let status of signalColors"
             (click)="toggleStatusFilter(status)"
           >
             <span
@@ -74,7 +74,11 @@
   <table class="traffic-table">
     <thead>
       <tr>
-        <th *ngFor="let header of tableHeaders">{{ header }}</th>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Active</th>
       </tr>
     </thead>
     <tbody>
@@ -85,23 +89,15 @@
         (mouseleave)="hidePopup()"
       >
         <td>{{ traffic.id }}</td>
-        <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
+        <td>{{ traffic.Latitude }}</td>
+        <td>{{ traffic.Longitude }}</td>
         <td>
           <span [ngClass]="traffic.active ? 'active' : 'inactive'">
             {{ traffic.active ? activeLabel : inactiveLabel }}
           </span>
         </td>
-        <!-- <td>
-          <span
-            class="status-dot"
-            [style.background]="statusColors[traffic.status]"
-            [title]="traffic.status"
-          ></span>
-          {{ traffic.status }}
-        </td> -->
       </tr>
-
       <tr *ngIf="paginatedTraffics.length === 0">
         <td colspan="5" class="no-results">
           No traffic signals found matching your criteria
@@ -110,16 +106,18 @@
     </tbody>
   </table>
 
-  <!-- popup -->
+  <!-- Popup -->
   <div
     class="traffic-popup"
     *ngIf="popupVisible"
     [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
   >
     <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
-
+    <div class="popup-details">
+      <div><strong>Latitude:</strong> {{ popupData?.Latitude }}</div>
+      <div><strong>Longitude:</strong> {{ popupData?.Longitude }}</div>
+    </div>
     <div class="status-columns">
-      <!-- L1 -->
       <div class="status-col">
         <h5>L1</h5>
         <div
@@ -134,8 +132,6 @@
           {{ getEmoji(color) }}
         </div>
       </div>
-
-      <!-- L2 -->
       <div class="status-col">
         <h5>L2</h5>
         <div
@@ -180,12 +176,9 @@
 
 <div style="padding: 16px">
   <h2>SignalR 2.x (jQuery) — Angular 14 V1</h2>
-
   <button (click)="sendTest()">Send Test Message</button>
-
   <h3>Last Message</h3>
   <pre>{{ lastMsg | json }}</pre>
-
   <h3>Last UnitAction</h3>
   <pre>{{ lastAction | json }}</pre>
 </div>
