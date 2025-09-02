@@ -21,6 +21,7 @@ import { Location } from 'src/app/model/traffic-signal-interface/location';
 export class MapviewComponent implements OnInit, AfterViewInit {
   trafficForm!: FormGroup;
   form!: FormGroup;
+  marker!: L.Marker;
 
   governorates: GovernorateDto[] = [];
   areas: Area[] = [];
@@ -33,6 +34,13 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   private markers: L.Marker[] = [];
   selectedMarker: L.Marker | null = null;
   selectedLocation: Location | null = null;
+
+  constructor(private fb: FormBuilder, private mapviewService: MapviewService) {
+    this.trafficForm = this.fb.group({
+      latitude: ['', Validators.required],
+      longitude: ['', Validators.required],
+    });
+  }
 
   private selectedIcon = L.icon({
     iconUrl: '../../../assets/img/traffic-light-selected.png',
@@ -48,11 +56,6 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     iconAnchor: [16, 32],
     popupAnchor: [0, -28],
   });
-
-  constructor(
-    private fb: FormBuilder,
-    private mapviewService: MapviewService
-  ) {}
 
   ngOnInit(): void {
     this.mapviewService.getGovernorates().subscribe({
@@ -79,7 +82,12 @@ export class MapviewComponent implements OnInit, AfterViewInit {
         [Validators.min(0), Validators.max(1000)],
       ],
     });
-
+    this.trafficForm.get('greenTime')?.valueChanges.subscribe(() => {
+      this.calculateRedTime();
+    });
+    this.trafficForm.get('amberTime')?.valueChanges.subscribe(() => {
+      this.calculateRedTime();
+    });
     this.form
       .get('greenTime')
       ?.valueChanges.subscribe(() => this.calculateRedTime());
@@ -89,15 +97,12 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   }
 
   calculateRedTime(): void {
-    const green = this.form.get('greenTime')?.value || 0;
-    const amber = this.form.get('amberTime')?.value || 0;
+    const green = Number(this.trafficForm.get('greenTime')?.value) || 0;
+    const amber = Number(this.trafficForm.get('amberTime')?.value) || 0;
 
-    const totalCycle = 40;
+    const red = green + amber;
 
-    const red = totalCycle - (green + amber);
-    this.form
-      .get('redTime')
-      ?.setValue(red >= 0 ? red : 0, { emitEvent: false });
+    this.trafficForm.get('redTime')?.setValue(red, { emitEvent: false });
   }
 
   // When governorate changes, load areas
@@ -129,8 +134,32 @@ export class MapviewComponent implements OnInit, AfterViewInit {
       this.trafficForm.markAllAsTouched();
     }
   }
+
+  // After view init to ensure map container is ready
   ngAfterViewInit(): void {
     this.initMap();
+
+    this.map = L.map('map').setView([30.0444, 31.2357], 13); // default Cairo
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(this.map);
+
+    this.marker = L.marker([30.0444, 31.2357]).addTo(this.map);
+
+    this.trafficForm.valueChanges.subscribe((val) => {
+      const lat = Number(val.latitude);
+      const lng = Number(val.longitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        this.updateMarker(lat, lng);
+      }
+    });
+  }
+  // Update marker position on map
+  updateMarker(lat: number, lng: number): void {
+    this.marker.setLatLng([lat, lng]);
+    this.map.setView([lat, lng], 15);
   }
 
   // Form field validation

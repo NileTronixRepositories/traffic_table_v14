@@ -17,7 +17,7 @@ export interface Traffic {
   status?: 'R' | 'G' | 'Y';
   active?: boolean;
   L1?: 'R' | 'G' | 'Y';
-  T?: number;
+  T?: number; 
   L2?: 'R' | 'G' | 'Y';
   Latitude?: string | null;
   Longitude?: string | null;
@@ -160,9 +160,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
     });
   }
   // Parse رسالة SignalR → { id, L1, L2, T }
-  private parseIncoming(
-    raw?: string
-  ): {
+  private parseIncoming(raw?: string): {
     id: number;
     L1: 'R' | 'G' | 'Y';
     L2: 'R' | 'G' | 'Y';
