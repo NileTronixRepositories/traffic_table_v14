@@ -11,6 +11,8 @@
           [(ngModel)]="searchTerm"
         />
       </div>
+
+      <!-- Status Filter -->
       <div class="filter-dropdown status-filter-dropdown">
         <button class="filter-button" (click)="toggleStatusFilterDropdown()">
           <i class="fas fa-filter"></i>
@@ -39,6 +41,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Active Filter -->
       <div class="filter-dropdown active-filter-dropdown">
         <button class="filter-button" (click)="toggleActiveFilterDropdown()">
           <i class="fas fa-power-off"></i>
@@ -68,6 +72,7 @@
       </div>
     </div>
   </div>
+
   <!-- Table -->
   <table class="traffic-table">
     <thead>
@@ -102,6 +107,7 @@
       </tr>
     </tbody>
   </table>
+
   <!-- Popup -->
   <div
     class="traffic-popup"
@@ -111,12 +117,16 @@
     <div *ngIf="popupDisconnected" class="badge-disconnected">
       :warning: Disconnected — frozen
     </div>
+
     <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
+
     <div class="popup-details">
       <div><strong>Latitude:</strong> {{ popupData?.Latitude }}</div>
       <div><strong>Longitude:</strong> {{ popupData?.Longitude }}</div>
     </div>
+
     <div class="status-columns">
+      <!-- L1 + T1 -->
       <div class="status-col">
         <h5>L1</h5>
         <div
@@ -126,11 +136,13 @@
           [class.active]="mapSignalColor(popupData?.L1) === color"
         >
           <span class="counter" *ngIf="mapSignalColor(popupData?.L1) === color">
-            {{ popupData?.T }}
+            {{ popupData?.T1 ?? 0 }}
           </span>
           {{ getEmoji(color) }}
         </div>
       </div>
+
+      <!-- L2 + T2 -->
       <div class="status-col">
         <h5>L2</h5>
         <div
@@ -140,13 +152,14 @@
           [class.active]="mapSignalColor(popupData?.L2) === color"
         >
           <span class="counter" *ngIf="mapSignalColor(popupData?.L2) === color">
-            {{ popupData?.T }}
+            {{ popupData?.T2 ?? 0 }}
           </span>
           {{ getEmoji(color) }}
         </div>
       </div>
     </div>
   </div>
+
   <!-- Footer / Pagination -->
   <div class="footer">
     <p>
