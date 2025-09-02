@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
 
-  signalRUrl: 'http://197.168.209.50/TLC/signalr',
+  signalRUrl: 'http://192.168.01.43/TLC/signalr',
 };
 
 /*

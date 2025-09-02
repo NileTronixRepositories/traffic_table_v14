@@ -1,23 +1,33 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, Subject, timer } from 'rxjs';
-import { UnitAction } from 'src/app/components/traffic-signal/traffic-signal.component';
-import { TrafficLog } from 'src/types/signalr';
-
-@Injectable({
-  providedIn: 'root',
-})
+import { Subject, timer } from 'rxjs';
+import { map } from 'rxjs/operators';
+@Injectable({ providedIn: 'root' })
 export class SignalRServiceService {
+  BaseBackUrl = 'http://192.168.1.43/TLC';
+
+  // --------- SignalR internals ---------
+  private connection: any;
+  private hub: any;
+  private readonly baseUrl = 'http://192.168.1.43/TLC';
+  private readonly hubName = 'messageHub';
+  private starting = false;
+  private connected = false;
+  private backoffMs = 1000;
+  private readonly maxBackoffMs = 10000;
+  // --------- Streams ---------
+  private messagesSub = new Subject<{ name: string; message: string }>();
+  messages$ = this.messagesSub.asObservable();
+  private connectionStateSub = new Subject<
+    'connecting' | 'connected' | 'reconnecting' | 'disconnected'
+  >();
+  connectionState$ = this.connectionStateSub.asObservable();
   constructor(private zone: NgZone, private http: HttpClient) {
     this.init();
   }
-
-  getGovernorates() {
-    return this.http.get<any[]>('/api/get/control-box');
-  }
-
+  // --------- REST ---------
   getControlBoxes() {
-    return this.http.get<any[]>('/api/get/control-box').pipe(
+    return this.http.get<any[]>(`${this.BaseBackUrl}/api/get/control-box`).pipe(
       map((data) =>
         data.map((item) => ({
           id: item.ID,
@@ -25,57 +35,16 @@ export class SignalRServiceService {
           Latitude: item.Latitude?.trim() || null,
           Longitude: item.Longitude?.trim() || null,
           ipAddress: item.IpAddress,
-          status: '',
+          status: 'R' as 'R' | 'G' | 'Y',
           active: true,
-          L1: '',
-          L2: '',
+          L1: 'R' as 'R' | 'G' | 'Y',
+          L2: 'R' as 'R' | 'G' | 'Y',
           T: 0,
         }))
       )
     );
   }
-  private connection: any;
-  private hub: any;
-
-  private readonly baseUrl = 'http://197.168.209.50/TLC';
-  //private readonly baseUrl = 'http://localhost/TLC'; // سيرفرك
-  private readonly hubName = 'messageHub';
-
-  private starting = false;
-  private connected = false;
-
-  private backoffMs = 1000; // 1s
-  private readonly maxBackoffMs = 10000; // 10s
-
-  // Streams
-  private messagesSub = new Subject<{ name: string; message: string }>();
-  messages$ = this.messagesSub.asObservable();
-
-  private unitActionsSub = new Subject<{
-    roomId: string;
-    actionId: string;
-    operatorData: string;
-  }>();
-
-  unitActions$ = this.unitActionsSub.asObservable().pipe(
-    map(({ roomId, actionId, operatorData }) => {
-      let parsed: any;
-      try {
-        parsed = JSON.parse(operatorData);
-      } catch (e) {
-        console.error('❌ Error parsing operatorData:', operatorData, e);
-        return null;
-      }
-
-      return {
-        id: actionId,
-        L1: parsed.L1 as 'R' | 'G' | 'Y',
-        L2: parsed.L2 as 'R' | 'G' | 'Y',
-        T: parsed.T as number,
-      } as UnitAction;
-    })
-  );
-
+  // --------- SignalR setup ---------
   private init() {
     const $any = (window as any).$;
     if (!$any || !$any.hubConnection) {
@@ -84,87 +53,88 @@ export class SignalRServiceService {
       );
       return;
     }
-
-    // 1) Create connection + hub proxy
-    this.connection = $any.hubConnection(this.baseUrl); // http://197.168.209.50/signalr
+    this.connection = $any.hubConnection(this.baseUrl);
     this.hub = this.connection.createHubProxy(this.hubName);
-
-    // 2) Server -> Client handlers (أسماء السيرفر)
+    // Server -> Client handlers
     this.hub.on('ReceiveMessage', (name: string, message: string) => {
       this.zone.run(() => this.messagesSub.next({ name, message }));
     });
-
-    this.hub.on(
-      'ReceiveUnitAction',
-      (roomId: string, actionId: string, operatorData: string) => {
-        this.zone.run(() =>
-          this.unitActionsSub.next({ roomId, actionId, operatorData })
-        );
-      }
-    );
-
-    // 3) State
+    // State changes
     this.connection.stateChanged((chg: any) => {
-      // 0 connecting, 1 connected, 2 reconnecting, 4 disconnected
-      this.connected = chg.newState === 1;
+      const cs = $any.signalR.connectionState;
+      switch (chg.newState) {
+        case cs.connecting:
+          this.connected = false;
+          this.emitState('connecting');
+          break;
+        case cs.connected:
+          this.connected = true;
+          this.backoffMs = 1000;
+          this.emitState('connected');
+          break;
+        case cs.reconnecting:
+          this.connected = false;
+          this.emitState('reconnecting');
+          break;
+        case cs.disconnected:
+          this.connected = false;
+          this.emitState('disconnected');
+          this.scheduleRestart();
+          break;
+      }
     });
-
-    // 4) Start
+    if (typeof this.connection.disconnected === 'function') {
+      this.connection.disconnected(() => {
+        this.connected = false;
+        this.emitState('disconnected');
+        this.scheduleRestart();
+      });
+    }
     this.start();
   }
-
-  /** يبدأ الاتصال مع إعادة المحاولة (exponential backoff) */
+  private emitState(
+    s: 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
+  ) {
+    this.zone.run(() => this.connectionStateSub.next(s));
+  }
   start(): Promise<void> {
     if (this.starting || this.connected || !this.connection)
       return Promise.resolve();
     this.starting = true;
-
     return new Promise<void>((resolve) => {
-      const tryStart = () => {
-        this.connection
-          .start()
-          .done(() => {
-            this.starting = false;
-            this.connected = true;
-            this.backoffMs = 1000;
-            console.log('✅ SignalR connected:', this.connection.id);
-            resolve();
-          })
-          .fail((err: any) => {
-            this.starting = false;
-            this.connected = false;
-            console.warn('⚠️ SignalR start failed, retrying...', err);
-            this.backoffMs = Math.min(this.backoffMs * 2, this.maxBackoffMs);
-            timer(this.backoffMs).subscribe(() => this.start());
-          });
-      };
-      tryStart();
+      this.connection
+        .start()
+        .done(() => {
+          this.starting = false;
+          this.connected = true;
+          this.backoffMs = 1000;
+          console.log(':white_tick: SignalR connected:', this.connection.id);
+          this.emitState('connected');
+          resolve();
+        })
+        .fail((err: any) => {
+          this.starting = false;
+          this.connected = false;
+          console.warn(':warning: SignalR start failed, retrying...', err);
+          this.emitState('disconnected');
+          this.scheduleRestart();
+          resolve();
+        });
     });
   }
-
-  // ===== Public API =====
-
-  /** يرسل رسالة إلى الهَب (ينادي SendMessage على السيرفر) */
+  private scheduleRestart() {
+    this.backoffMs = Math.min(this.backoffMs * 2, this.maxBackoffMs);
+    timer(this.backoffMs).subscribe(() => this.start());
+  }
+  // Optional utility
+  get isConnected() {
+    return this.connected;
+  }
+  // Optional: send message
   sendMessage(user: string, message: string) {
     if (!this.hub) return;
     this.hub
       .invoke('SendMessage', user, message)
       .fail((e: any) => console.error('SendMessage failed', e));
-  }
-
-  /** يرسل UnitAction (ينادي SendUnitAction على السيرفر) */
-  sendUnitAction(roomId: string, actionId: string, operatorData: string) {
-    if (!this.hub) return;
-    this.hub
-      .invoke('SendUnitAction', roomId, actionId, operatorData)
-      .fail((e: any) => console.error('SendUnitAction failed', e));
-  }
-
-  /** انضمام لجروب */
-  join(groupName: string) {
-    if (!this.hub) return;
-    this.hub
-      .invoke('Join', groupName)
-      .fail((e: any) => console.error('Join failed', e));
   }
 }

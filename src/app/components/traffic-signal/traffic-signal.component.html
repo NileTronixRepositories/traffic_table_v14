@@ -11,7 +11,6 @@
           [(ngModel)]="searchTerm"
         />
       </div>
-
       <div class="filter-dropdown status-filter-dropdown">
         <button class="filter-button" (click)="toggleStatusFilterDropdown()">
           <i class="fas fa-filter"></i>
@@ -40,7 +39,6 @@
           </div>
         </div>
       </div>
-
       <div class="filter-dropdown active-filter-dropdown">
         <button class="filter-button" (click)="toggleActiveFilterDropdown()">
           <i class="fas fa-power-off"></i>
@@ -70,14 +68,13 @@
       </div>
     </div>
   </div>
-
+  <!-- Table -->
   <table class="traffic-table">
     <thead>
       <tr>
         <th>ID</th>
+        <th>IpAddress</th>
         <th>Name</th>
-        <th>Latitude</th>
-        <th>Longitude</th>
         <th>Active</th>
       </tr>
     </thead>
@@ -87,11 +84,11 @@
         (mouseenter)="showPopup(traffic, $event)"
         (mousemove)="movePopup($event)"
         (mouseleave)="hidePopup()"
+        (click)="applyCurrent(traffic, $event)"
       >
         <td>{{ traffic.id }}</td>
+        <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
-        <td>{{ traffic.Latitude }}</td>
-        <td>{{ traffic.Longitude }}</td>
         <td>
           <span [ngClass]="traffic.active ? 'active' : 'inactive'">
             {{ traffic.active ? activeLabel : inactiveLabel }}
@@ -99,19 +96,21 @@
         </td>
       </tr>
       <tr *ngIf="paginatedTraffics.length === 0">
-        <td colspan="5" class="no-results">
+        <td colspan="4" class="no-results">
           No traffic signals found matching your criteria
         </td>
       </tr>
     </tbody>
   </table>
-
   <!-- Popup -->
   <div
     class="traffic-popup"
     *ngIf="popupVisible"
     [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
   >
+    <div *ngIf="popupDisconnected" class="badge-disconnected">
+      :warning: Disconnected — frozen
+    </div>
     <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
     <div class="popup-details">
       <div><strong>Latitude:</strong> {{ popupData?.Latitude }}</div>
@@ -148,7 +147,7 @@
       </div>
     </div>
   </div>
-
+  <!-- Footer / Pagination -->
   <div class="footer">
     <p>
       Showing {{ paginatedTraffics.length }} of
@@ -172,13 +171,4 @@
       </button>
     </div>
   </div>
-</div>
-
-<div style="padding: 16px">
-  <h2>SignalR 2.x (jQuery) — Angular 14 V1</h2>
-  <button (click)="sendTest()">Send Test Message</button>
-  <h3>Last Message</h3>
-  <pre>{{ lastMsg | json }}</pre>
-  <h3>Last UnitAction</h3>
-  <pre>{{ lastAction | json }}</pre>
 </div>

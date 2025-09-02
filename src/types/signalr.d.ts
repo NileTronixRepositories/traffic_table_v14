@@ -1,4 +1,6 @@
-interface SignalR { hubConnection(url?: string): any; }
+interface SignalR {
+  hubConnection(url?: string): any;
+}
 
 interface JQueryStatic {
   connection?: any;
@@ -6,12 +8,11 @@ interface JQueryStatic {
 }
 
 declare var $: JQueryStatic;
+declare module 'leaflet';
 
-export interface TrafficLog
-{
-IpAdress:string,
-L1 : string  , 
-T : number , 
-L2 : string
-
+export interface TrafficLog {
+  IpAdress: string;
+  L1: string;
+  T: number;
+  L2: string;
 }

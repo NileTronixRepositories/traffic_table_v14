@@ -1,0 +1,221 @@
+<div class="bg-signin">
+  <div class="map-container">
+    <div class="nav-side"></div>
+
+    <!-- Form Section -->
+    <div class="point-select">
+      <form
+        [formGroup]="trafficForm"
+        (ngSubmit)="submitForm()"
+        class="traffic-form"
+      >
+        <!-- Governorate Field -->
+        <div class="form-group">
+          <label class="form-label">
+            Governorate <span class="required">*</span>
+          </label>
+          <select
+            class="form-control"
+            formControlName="governorate"
+            (change)="onGovernorateChange($event)"
+            [class.is-invalid]="isFieldInvalid('governorate')"
+          >
+            <option value="">-- Select Governorate --</option>
+            <option *ngFor="let gov of governorates" [value]="gov.ID">
+              {{ gov.Name }}
+            </option>
+          </select>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('governorate')">
+            Governorate is required
+          </div>
+        </div>
+
+        <!-- Area Field -->
+        <div class="form-group">
+          <label class="form-label">
+            Area <span class="required">*</span>
+          </label>
+          <select
+            class="form-control"
+            formControlName="area"
+            [disabled]="areas.length === 0"
+            [class.is-invalid]="isFieldInvalid('area')"
+          >
+            <option value="">-- Select Area --</option>
+            <option *ngFor="let area of areas" [value]="area.ID">
+              {{ area.Name }}
+            </option>
+          </select>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('area')">
+            Area is required
+          </div>
+        </div>
+
+        <!-- Name Field -->
+        <div class="form-group">
+          <label class="form-label">
+            Name <span class="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            formControlName="name"
+            placeholder="Descriptive name"
+            [class.is-invalid]="isFieldInvalid('name')"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">
+            Name is required
+          </div>
+        </div>
+
+        <!-- Coordinates Container -->
+        <div class="coordinates-container">
+          <!-- Latitude Field -->
+          <div class="form-group coordinate-field">
+            <label class="form-label">
+              Latitude <span class="required">*</span>
+            </label>
+            <input
+              class="form-control"
+              type="text"
+              formControlName="latitude"
+              placeholder="Latitude"
+              [class.is-invalid]="isFieldInvalid('latitude')"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('latitude')">
+              Valid latitude is required
+            </div>
+          </div>
+
+          <!-- Longitude Field -->
+          <div class="form-group coordinate-field">
+            <label class="form-label">
+              Longitude <span class="required">*</span>
+            </label>
+            <input
+              class="form-control"
+              type="text"
+              formControlName="longitude"
+              placeholder="Longitude"
+              [class.is-invalid]="isFieldInvalid('longitude')"
+            />
+            <div class="invalid-feedback" *ngIf="isFieldInvalid('longitude')">
+              Valid longitude is required
+            </div>
+          </div>
+        </div>
+
+        <!-- IP Address Field -->
+        <div class="form-group">
+          <label class="form-label">
+            IP Address <span class="required">*</span>
+          </label>
+          <input
+            class="form-control"
+            type="text"
+            formControlName="ipAddress"
+            placeholder="IP Address"
+            [class.is-invalid]="isFieldInvalid('ipAddress')"
+          />
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('ipAddress')">
+            Valid IP address is required
+          </div>
+        </div>
+
+        <!-- Light Pattern Section -->
+        <div class="light-pattern-section">
+          <h5 class="section-header">Light Pattern</h5>
+
+          <!-- Template Selection -->
+          <div class="form-group">
+            <label class="form-label">Select Template</label>
+            <select class="form-control" formControlName="template">
+              <option value="0">- N/A -</option>
+              <option *ngFor="let template of templates" [value]="template.ID">
+                {{ template.Name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Light Timing Controls -->
+          <div class="light-timing-controls">
+            <div class="light-control">
+              <img src="assets/img/g.png" height="45" alt="Green Light" />
+              <div class="time-input-container">
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="greenTime"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  [class.is-invalid]="isFieldInvalid('greenTime')"
+                />
+                <span class="time-unit">sec.</span>
+              </div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('greenTime')">
+                Value must be between 0 and 1000
+              </div>
+            </div>
+
+            <div class="light-control">
+              <img src="assets/img/a.png" height="45" alt="Amber Light" />
+              <div class="time-input-container">
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="amberTime"
+                  min="0"
+                  max="1000"
+                  step="1"
+                  [class.is-invalid]="isFieldInvalid('amberTime')"
+                />
+                <span class="time-unit">sec.</span>
+              </div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('amberTime')">
+                Value must be between 0 and 1000
+              </div>
+            </div>
+
+            <div class="light-control">
+              <img src="assets/img/r.png" height="45" alt="Red Light" />
+              <div class="time-input-container">
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="redTime"
+                  [disabled]="true"
+                />
+                <span class="time-unit">sec.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template details would go here -->
+        <div class="template-details"></div>
+      </form>
+    </div>
+
+    <!-- Map Section -->
+    <div class="map-view">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="point-settings">
+    <button class="btn btn-outline-success" (click)="applyChanges()">
+      <strong>Apply &#10097;</strong>
+    </button>
+    <button
+      class="btn btn-outline-danger ms-2"
+      (click)="deleteLocation()"
+      [disabled]="!selectedLocation"
+    >
+      <strong>Delete &#10006;</strong>
+    </button>
+  </div>
+
+  <img class="sticky" src="assets/img/nile.png" alt="Nile" />
+</div>
