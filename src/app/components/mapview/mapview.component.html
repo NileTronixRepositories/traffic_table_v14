@@ -4,12 +4,8 @@
 
     <!-- Form Section -->
     <div class="point-select">
-      <form
-        [formGroup]="trafficForm"
-        (ngSubmit)="submitForm()"
-        class="traffic-form"
-      >
-        <!-- Governorate Field -->
+      <form [formGroup]="trafficForm" (ngSubmit)="submitForm()" class="traffic-form">
+        <!-- Governorate -->
         <div class="form-group">
           <label class="form-label">
             Governorate <span class="required">*</span>
@@ -21,16 +17,14 @@
             [class.is-invalid]="isFieldInvalid('governorate')"
           >
             <option value="">-- Select Governorate --</option>
-            <option *ngFor="let gov of governorates" [value]="gov.ID">
-              {{ gov.Name }}
-            </option>
+            <option *ngFor="let gov of governorates" [value]="gov.ID">{{ gov.Name }}</option>
           </select>
           <div class="invalid-feedback" *ngIf="isFieldInvalid('governorate')">
             Governorate is required
           </div>
         </div>
 
-        <!-- Area Field -->
+        <!-- Area -->
         <div class="form-group">
           <label class="form-label">
             Area <span class="required">*</span>
@@ -42,16 +36,12 @@
             [class.is-invalid]="isFieldInvalid('area')"
           >
             <option value="">-- Select Area --</option>
-            <option *ngFor="let area of areas" [value]="area.ID">
-              {{ area.Name }}
-            </option>
+            <option *ngFor="let area of areas" [value]="area.ID">{{ area.Name }}</option>
           </select>
-          <div class="invalid-feedback" *ngIf="isFieldInvalid('area')">
-            Area is required
-          </div>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('area')">Area is required</div>
         </div>
 
-        <!-- Name Field -->
+        <!-- Name -->
         <div class="form-group">
           <label class="form-label">
             Name <span class="required">*</span>
@@ -63,18 +53,13 @@
             placeholder="Descriptive name"
             [class.is-invalid]="isFieldInvalid('name')"
           />
-          <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">
-            Name is required
-          </div>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">Name is required</div>
         </div>
 
-        <!-- Coordinates Container -->
+        <!-- Coordinates -->
         <div class="coordinates-container">
-          <!-- Latitude Field -->
           <div class="form-group coordinate-field">
-            <label class="form-label">
-              Latitude <span class="required">*</span>
-            </label>
+            <label class="form-label">Latitude <span class="required">*</span></label>
             <input
               class="form-control"
               type="text"
@@ -87,11 +72,8 @@
             </div>
           </div>
 
-          <!-- Longitude Field -->
           <div class="form-group coordinate-field">
-            <label class="form-label">
-              Longitude <span class="required">*</span>
-            </label>
+            <label class="form-label">Longitude <span class="required">*</span></label>
             <input
               class="form-control"
               type="text"
@@ -105,11 +87,9 @@
           </div>
         </div>
 
-        <!-- IP Address Field -->
+        <!-- IP -->
         <div class="form-group">
-          <label class="form-label">
-            IP Address <span class="required">*</span>
-          </label>
+          <label class="form-label">IP Address <span class="required">*</span></label>
           <input
             class="form-control"
             type="text"
@@ -122,11 +102,10 @@
           </div>
         </div>
 
-        <!-- Light Pattern Section -->
+        <!-- Light Pattern -->
         <div class="light-pattern-section">
           <h5 class="section-header">Light Pattern</h5>
 
-          <!-- Template Selection -->
           <div class="form-group">
             <label class="form-label">Select Template</label>
             <select class="form-control" formControlName="template">
@@ -137,7 +116,6 @@
             </select>
           </div>
 
-          <!-- Light Timing Controls -->
           <div class="light-timing-controls">
             <div class="light-control">
               <img src="assets/img/g.png" height="45" alt="Green Light" />
@@ -180,19 +158,13 @@
             <div class="light-control">
               <img src="assets/img/r.png" height="45" alt="Red Light" />
               <div class="time-input-container">
-                <input
-                  class="form-control"
-                  type="number"
-                  formControlName="redTime"
-                  [disabled]="true"
-                />
+                <input class="form-control" type="number" formControlName="redTime" [disabled]="true" />
                 <span class="time-unit">sec.</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Template details would go here -->
         <div class="template-details"></div>
       </form>
     </div>
@@ -203,7 +175,7 @@
     </div>
   </div>
 
-  <!-- Action Buttons -->
+  <!-- Actions -->
   <div class="point-settings">
     <button class="btn btn-outline-success" (click)="applyChanges()">
       <strong>Apply &#10097;</strong>

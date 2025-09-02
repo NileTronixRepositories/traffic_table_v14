@@ -23,7 +23,7 @@ export class MapviewService {
   }
 
   getLocations(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/Locations/list`);
+    return this.http.get<any[]>(`${this.baseUrl}/get/control-box`);
   }
 
   setLocation(data: any): Observable<any> {

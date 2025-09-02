@@ -1,15 +1,11 @@
 <div class="container-fluid">
   <div class="header">
     <h1 class="title">Traffic Signal Management</h1>
+
     <div class="search-container">
       <div class="search-box">
         <i class="fas fa-search search-icon"></i>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search by name or ID..."
-          [(ngModel)]="searchTerm"
-        />
+        <input type="text" class="search-input" placeholder="Search by name or ID..." [(ngModel)]="searchTerm" />
       </div>
 
       <!-- Status Filter -->
@@ -27,15 +23,8 @@
             <span>Filter All</span>
           </div>
           <div class="filter-divider"></div>
-          <div
-            class="filter-option"
-            *ngFor="let status of signalColors"
-            (click)="toggleStatusFilter(status)"
-          >
-            <span
-              class="status-dot"
-              [style.background]="statusColors[status]"
-            ></span>
+          <div class="filter-option" *ngFor="let status of signalColors" (click)="toggleStatusFilter(status)">
+            <span class="status-dot" [style.background]="statusColors[status]"></span>
             <span>{{ status }}</span>
             <span class="checkmark">{{ statusFilter[status] ? "✓" : "" }}</span>
           </div>
@@ -52,21 +41,15 @@
         <div class="filter-menu" [class.show]="showActiveFilter">
           <div class="filter-option" (click)="activeFilter = 'ALL'">
             <span>All</span>
-            <span class="checkmark">{{
-              activeFilter === "ALL" ? "✓" : ""
-            }}</span>
+            <span class="checkmark">{{ activeFilter === "ALL" ? "✓" : "" }}</span>
           </div>
           <div class="filter-option" (click)="activeFilter = 'ACTIVE'">
             <span>Active Only</span>
-            <span class="checkmark">{{
-              activeFilter === "ACTIVE" ? "✓" : ""
-            }}</span>
+            <span class="checkmark">{{ activeFilter === "ACTIVE" ? "✓" : "" }}</span>
           </div>
           <div class="filter-option" (click)="activeFilter = 'INACTIVE'">
             <span>Inactive Only</span>
-            <span class="checkmark">{{
-              activeFilter === "INACTIVE" ? "✓" : ""
-            }}</span>
+            <span class="checkmark">{{ activeFilter === "INACTIVE" ? "✓" : "" }}</span>
           </div>
         </div>
       </div>
@@ -81,16 +64,12 @@
         <th>IpAddress</th>
         <th>Name</th>
         <th>Active</th>
+        <th>Current</th>
       </tr>
     </thead>
     <tbody>
-      <tr
-        *ngFor="let traffic of paginatedTraffics"
-        (mouseenter)="showPopup(traffic, $event)"
-        (mousemove)="movePopup($event)"
-        (mouseleave)="hidePopup()"
-        (click)="applyCurrent(traffic, $event)"
-      >
+      <tr *ngFor="let traffic of paginatedTraffics" (mouseenter)="showPopup(traffic, $event)"
+        (mousemove)="movePopup($event)" (mouseleave)="hidePopup()" >
         <td>{{ traffic.id }}</td>
         <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
@@ -98,6 +77,9 @@
           <span [ngClass]="traffic.active ? 'active' : 'inactive'">
             {{ traffic.active ? activeLabel : inactiveLabel }}
           </span>
+        </td>
+        <td>
+          <button class="btn btn-success" (click)="applyCurrent(traffic, $event)"> Apply </button>
         </td>
       </tr>
       <tr *ngIf="paginatedTraffics.length === 0">
@@ -109,52 +91,72 @@
   </table>
 
   <!-- Popup -->
-  <div
-    class="traffic-popup"
-    *ngIf="popupVisible"
-    [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
-  >
-    <div *ngIf="popupDisconnected" class="badge-disconnected">
-      :warning: Disconnected — frozen
+  <div class="traffic-popup" *ngIf="popupVisible" [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }">
+    <!-- Header -->
+    <div class="tp-header">
+      <div class="tp-title">
+        <span class="tp-dot" [class.connected]="!popupDisconnected" [class.disconnected]="popupDisconnected"></span>
+        <span class="tp-name">{{ popupData?.name || "—" }}</span>
+      </div>
+      <span class="tp-chip" [class.tp-chip--danger]="popupDisconnected">
+        {{ popupDisconnected ? "Disconnected" : "Live" }}
+      </span>
     </div>
 
-    <h4 class="text-center fs-6">{{ popupData?.name }}</h4>
-
-    <div class="popup-details">
-      <div><strong>Latitude:</strong> {{ popupData?.Latitude }}</div>
-      <div><strong>Longitude:</strong> {{ popupData?.Longitude }}</div>
+    <!-- Coordinates -->
+    <div class="tp-meta">
+      <div class="tp-meta__item">
+        <i class="tp-ico">📍</i>
+        <span>{{ popupData?.Latitude || "—" }}</span>
+      </div>
+      <div class="tp-meta__sep">•</div>
+      <div class="tp-meta__item">
+        <i class="tp-ico">🧭</i>
+        <span>{{ popupData?.Longitude || "—" }}</span>
+      </div>
     </div>
 
-    <div class="status-columns">
-      <!-- L1 + T1 -->
-      <div class="status-col">
-        <h5>L1</h5>
-        <div
-          *ngFor="let color of signalColors"
-          class="status-box"
-          [ngClass]="color.toLowerCase()"
-          [class.active]="mapSignalColor(popupData?.L1) === color"
-        >
-          <span class="counter" *ngIf="mapSignalColor(popupData?.L1) === color">
-            {{ popupData?.T1 ?? 0 }}
-          </span>
-          {{ getEmoji(color) }}
+    <!-- Grid -->
+    <div class="tp-grid">
+      <!-- L1 -->
+      <div class="tp-col">
+        <div class="tp-col__head">
+          <span class="tp-col__label">L1</span>
+          <span class="tp-timer" [class.tp-timer--warn]="(popupData?.T1 ?? 0) <= 5"
+            [class.tp-timer--ok]="(popupData?.T1 ?? 0) > 5">{{ popupData?.T1 ?? 0 }}s</span>
+        </div>
+
+        <div class="tp-lamp" [class.is-red]="mapSignalColor(popupData?.L1) === 'RED'"
+          [class.is-green]="mapSignalColor(popupData?.L1) === 'GREEN'"
+          [class.is-yellow]="mapSignalColor(popupData?.L1) === 'YELLOW'">
+          {{ getEmoji(mapSignalColor(popupData?.L1)) }}
+        </div>
+
+        <div class="tp-legend">
+          <span class="tp-dot sm red" [class.on]="mapSignalColor(popupData?.L1) === 'RED'"></span>
+          <span class="tp-dot sm green" [class.on]="mapSignalColor(popupData?.L1) === 'GREEN'"></span>
+          <span class="tp-dot sm yellow" [class.on]="mapSignalColor(popupData?.L1) === 'YELLOW'"></span>
         </div>
       </div>
 
-      <!-- L2 + T2 -->
-      <div class="status-col">
-        <h5>L2</h5>
-        <div
-          *ngFor="let color of signalColors"
-          class="status-box"
-          [ngClass]="color.toLowerCase()"
-          [class.active]="mapSignalColor(popupData?.L2) === color"
-        >
-          <span class="counter" *ngIf="mapSignalColor(popupData?.L2) === color">
-            {{ popupData?.T2 ?? 0 }}
-          </span>
-          {{ getEmoji(color) }}
+      <!-- L2 -->
+      <div class="tp-col">
+        <div class="tp-col__head">
+          <span class="tp-col__label">L2</span>
+          <span class="tp-timer" [class.tp-timer--warn]="(popupData?.T2 ?? 0) <= 5"
+            [class.tp-timer--ok]="(popupData?.T2 ?? 0) > 5">{{ popupData?.T2 ?? 0 }}s</span>
+        </div>
+
+        <div class="tp-lamp" [class.is-red]="mapSignalColor(popupData?.L2) === 'RED'"
+          [class.is-green]="mapSignalColor(popupData?.L2) === 'GREEN'"
+          [class.is-yellow]="mapSignalColor(popupData?.L2) === 'YELLOW'">
+          {{ getEmoji(mapSignalColor(popupData?.L2)) }}
+        </div>
+
+        <div class="tp-legend">
+          <span class="tp-dot sm red" [class.on]="mapSignalColor(popupData?.L2) === 'RED'"></span>
+          <span class="tp-dot sm green" [class.on]="mapSignalColor(popupData?.L2) === 'GREEN'"></span>
+          <span class="tp-dot sm yellow" [class.on]="mapSignalColor(popupData?.L2) === 'YELLOW'"></span>
         </div>
       </div>
     </div>
@@ -167,19 +169,11 @@
       {{ filteredTraffics.length }} traffic signals
     </p>
     <div class="pagination">
-      <button
-        class="prev-btn"
-        (click)="prevPage()"
-        [disabled]="currentPage === 1"
-      >
+      <button class="prev-btn" (click)="prevPage()" [disabled]="currentPage === 1">
         Previous
       </button>
       <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button
-        class="next-btn"
-        (click)="nextPage()"
-        [disabled]="currentPage === totalPages"
-      >
+      <button class="next-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
         Next
       </button>
     </div>
