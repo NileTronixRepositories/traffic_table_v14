@@ -4,7 +4,11 @@
 
     <!-- Form Section -->
     <div class="point-select">
-      <form [formGroup]="trafficForm" (ngSubmit)="submitForm()" class="traffic-form">
+      <form
+        [formGroup]="trafficForm"
+        (ngSubmit)="submitForm()"
+        class="traffic-form"
+      >
         <!-- Governorate -->
         <div class="form-group">
           <label class="form-label">
@@ -17,7 +21,9 @@
             [class.is-invalid]="isFieldInvalid('governorate')"
           >
             <option value="">-- Select Governorate --</option>
-            <option *ngFor="let gov of governorates" [value]="gov.ID">{{ gov.Name }}</option>
+            <option *ngFor="let gov of governorates" [value]="gov.ID">
+              {{ gov.Name }}
+            </option>
           </select>
           <div class="invalid-feedback" *ngIf="isFieldInvalid('governorate')">
             Governorate is required
@@ -36,9 +42,13 @@
             [class.is-invalid]="isFieldInvalid('area')"
           >
             <option value="">-- Select Area --</option>
-            <option *ngFor="let area of areas" [value]="area.ID">{{ area.Name }}</option>
+            <option *ngFor="let area of areas" [value]="area.ID">
+              {{ area.Name }}
+            </option>
           </select>
-          <div class="invalid-feedback" *ngIf="isFieldInvalid('area')">Area is required</div>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('area')">
+            Area is required
+          </div>
         </div>
 
         <!-- Name -->
@@ -53,13 +63,17 @@
             placeholder="Descriptive name"
             [class.is-invalid]="isFieldInvalid('name')"
           />
-          <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">Name is required</div>
+          <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">
+            Name is required
+          </div>
         </div>
 
         <!-- Coordinates -->
         <div class="coordinates-container">
           <div class="form-group coordinate-field">
-            <label class="form-label">Latitude <span class="required">*</span></label>
+            <label class="form-label"
+              >Latitude <span class="required">*</span></label
+            >
             <input
               class="form-control"
               type="text"
@@ -73,7 +87,9 @@
           </div>
 
           <div class="form-group coordinate-field">
-            <label class="form-label">Longitude <span class="required">*</span></label>
+            <label class="form-label"
+              >Longitude <span class="required">*</span></label
+            >
             <input
               class="form-control"
               type="text"
@@ -89,7 +105,9 @@
 
         <!-- IP -->
         <div class="form-group">
-          <label class="form-label">IP Address <span class="required">*</span></label>
+          <label class="form-label"
+            >IP Address <span class="required">*</span></label
+          >
           <input
             class="form-control"
             type="text"
@@ -108,7 +126,11 @@
 
           <div class="form-group">
             <label class="form-label">Select Template</label>
-            <select class="form-control" formControlName="template">
+            <select
+              class="form-control"
+              formControlName="template"
+              (change)="onTemplateSelect($any($event.target).value)"
+            >
               <option value="0">- N/A -</option>
               <option *ngFor="let template of templates" [value]="template.ID">
                 {{ template.Name }}
@@ -116,7 +138,26 @@
             </select>
           </div>
 
-          <div class="light-timing-controls">
+          <div
+            *ngIf="lightPatterns.length > 0"
+            class="template-patterns-section"
+          >
+            <h6 class="template-patterns-header">Template Patterns</h6>
+            <div *ngFor="let p of lightPatterns" class="pattern-item">
+              <span class="pattern-icon">
+                <img
+                  src="assets/img/traffic-light-305721.png"
+                  height="30"
+                  alt="Traffic Pattern"
+                />
+              </span>
+              <span class="pattern-badge">{{ p.Name }}</span>
+              <span class="pattern-time">From: {{ p.StartFrom }}</span>
+              <span class="pattern-time">To: {{ p.FinishBy }}</span>
+            </div>
+          </div>
+
+          <div class="light-timing-controls mt-3">
             <div class="light-control">
               <img src="assets/img/g.png" height="45" alt="Green Light" />
               <div class="time-input-container">
@@ -158,7 +199,12 @@
             <div class="light-control">
               <img src="assets/img/r.png" height="45" alt="Red Light" />
               <div class="time-input-container">
-                <input class="form-control" type="number" formControlName="redTime" [disabled]="true" />
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="redTime"
+                  [disabled]="true"
+                />
                 <span class="time-unit">sec.</span>
               </div>
             </div>

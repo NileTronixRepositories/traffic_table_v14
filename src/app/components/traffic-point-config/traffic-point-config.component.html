@@ -1,0 +1,249 @@
+<div class="traffic-control-container">
+  <h2 class="main-header">Traffic Point Configuration</h2>
+
+  <form [formGroup]="form" class="traffic-form">
+    <div class="form-row">
+      <!-- Governorate -->
+      <div class="form-group">
+        <label class="form-label required">Governorate</label>
+        <select formControlName="governorate" class="form-control">
+          <option *ngFor="let g of governorates" [value]="g.ID">
+            {{ g.Name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Area -->
+      <div class="form-group">
+        <label class="form-label required">Area</label>
+        <select formControlName="area" class="form-control">
+          <option *ngFor="let a of areas" [value]="a.ID">{{ a.Name }}</option>
+        </select>
+      </div>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label class="form-label required">Name</label>
+        <input
+          formControlName="name"
+          class="form-control"
+          placeholder="Descriptive name"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <!-- Latitude -->
+      <div class="form-group">
+        <label class="form-label required">Latitude</label>
+        <input
+          type="number"
+          formControlName="latitude"
+          class="form-control"
+          placeholder="00.0000"
+          step="0.0001"
+        />
+      </div>
+
+      <!-- Longitude -->
+      <div class="form-group">
+        <label class="form-label required">Longitude</label>
+        <input
+          type="number"
+          formControlName="longitude"
+          class="form-control"
+          placeholder="00.0000"
+          step="0.0001"
+        />
+      </div>
+
+      <!-- IP Address -->
+      <div class="form-group">
+        <label class="form-label required">IP Address</label>
+        <input
+          formControlName="ipAddress"
+          class="form-control"
+          placeholder="192.168.1.1"
+        />
+      </div>
+    </div>
+
+    <!-- Light Pattern -->
+    <div class="form-group">
+      <label class="form-label">Light Pattern</label>
+      <select
+        formControlName="pattern"
+        class="form-control"
+        (click)="onPatternChange(form.value.pattern)"
+      >
+        <option [ngValue]="null">-- Select Pattern --</option>
+        <option *ngFor="let p of patterns" [ngValue]="p">
+          {{ p.Name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Point Configuration Section -->
+    <div class="point-configuration">
+      <h3 class="section-title">Point Configuration</h3>
+
+      <!-- Intervals with icons -->
+      <div class="light-intervals">
+        <div class="light-control">
+          <img
+            src="assets/img/g.png"
+            height="50"
+            alt="Green Light"
+            class="light-icon"
+          />
+          <label class="light-label">GREEN</label>
+          <input
+            type="number"
+            formControlName="green"
+            class="time-input"
+            min="0"
+            max="255"
+            value="0"
+          />
+          <span class="time-unit">sec</span>
+        </div>
+
+        <div class="light-control">
+          <img
+            src="assets/img/a.png"
+            height="50"
+            alt="Yellow Light"
+            class="light-icon"
+          />
+          <label class="light-label">YELLOW</label>
+          <input
+            type="number"
+            formControlName="yellow"
+            class="time-input"
+            min="0"
+            max="255"
+            value="0"
+          />
+          <span class="time-unit">sec</span>
+        </div>
+
+        <div class="light-control">
+          <img
+            src="assets/img/r.png"
+            height="50"
+            alt="Red Light"
+            class="light-icon"
+          />
+          <label class="light-label">RED</label>
+          <input
+            type="number"
+            formControlName="red"
+            class="time-input"
+            min="0"
+            max="255"
+            value="0"
+          />
+          <span class="time-unit">sec</span>
+        </div>
+      </div>
+
+      <!-- Blink Options -->
+      <div class="blink-options">
+        <div class="blink-title">Blink Options</div>
+        <div class="blink-controls">
+          <label class="blink-checkbox">
+            <input type="checkbox" formControlName="blinkGreen" />
+            <span class="checkmark"></span>
+            Blink Green
+          </label>
+          <label class="blink-checkbox">
+            <input type="checkbox" formControlName="blinkYellow" />
+            <span class="checkmark"></span>
+            Blink Yellow
+          </label>
+          <label class="blink-checkbox">
+            <input type="checkbox" formControlName="blinkRed" />
+            <span class="checkmark"></span>
+            Blink Red
+          </label>
+        </div>
+      </div>
+
+      <!-- Toggle Main Set -->
+      <div class="toggle-main">
+        <label class="toggle-switch">
+          <input type="checkbox" formControlName="changeMain" />
+          <span class="slider"></span>
+          Toggle main-set
+        </label>
+      </div>
+    </div>
+
+    <!-- Current Status -->
+    <div class="current-status">
+      <h4>Current Status</h4>
+      <div class="status-display">
+        <div class="status-values">
+          <span>
+            <img
+              src="assets/img/r.png"
+              height="50"
+              alt="Red Light"
+              class="light-icon"
+              [style.filter]="
+                form.value.blinkRed && !blinkRedActive
+                  ? 'grayscale(1)'
+                  : 'grayscale(0)'
+              "
+            />
+            : {{ red }}s
+          </span>
+          <span>
+            <img
+              src="assets/img/a.png"
+              height="50"
+              alt="Yellow Light"
+              class="light-icon"
+              [style.filter]="
+                form.value.blinkYellow && !blinkAmberActive
+                  ? 'grayscale(1)'
+                  : 'grayscale(0)'
+              "
+            />
+            : {{ yellow }}s
+          </span>
+          <span>
+            <img
+              src="assets/img/g.png"
+              height="50"
+              alt="Green Light"
+              class="light-icon"
+              [style.filter]="
+                form.value.blinkGreen && !blinkGreenActive
+                  ? 'grayscale(1)'
+                  : 'grayscale(0)'
+              "
+            />
+            : {{ green }}s
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button type="button" class="btn btn-delete">
+        <span class="btn-icon">✕</span>
+        Delete
+      </button>
+      <button type="button" class="btn btn-run" (click)="runCommand()">
+        <span class="btn-icon">▶</span>
+        Run
+      </button>
+      <button type="button" class="btn btn-apply" (click)="applyChanges()">
+        <span class="btn-icon">✔</span>
+        Apply
+      </button>
+    </div>
+  </form>
+</div>

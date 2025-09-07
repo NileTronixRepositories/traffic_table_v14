@@ -11,20 +11,8 @@
     {{ title }}
   </a>
 
-  <!-- Search Box -->
-  <div class="flex-grow-1 px-3">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="Location, Name or IP-Address"
-      [(ngModel)]="searchText"
-      (input)="onSearchChange(searchText)"
-    />
-  </div>
-
   <div class="collapse navbar-collapse">
     <ul class="navbar-nav ms-auto">
-    
       <li class="nav-item">
         <a
           class="nav-link"
@@ -39,8 +27,19 @@
           >Map View</a
         >
       </li>
-        <li class="nav-item">
-        <a class="nav-link" routerLink="/map" routerLinkActive="active">Green Way</a>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLink="/TrafficPointConfic"
+          routerLinkActive="active"
+          >Traffic Config</a
+        >
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/map" routerLinkActive="active"
+          >Green Way</a
+        >
       </li>
     </ul>
   </div>

@@ -34,11 +34,14 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   // Leaflet
   private map!: L.Map;
   private markers: L.Marker[] = [];
-  private editMarker!: L.Marker;           // ماركر التحرير (المربوط بالحقول)
-  selectedMarker: L.Marker | null = null;  // آخر ماركر متحدد
+  private editMarker!: L.Marker; // ماركر التحرير (المربوط بالحقول)
+  selectedMarker: L.Marker | null = null; // آخر ماركر متحدد
   selectedLocation: Location | null = null;
 
-  constructor(private fb: FormBuilder, private mapviewService: MapviewService) {}
+  constructor(
+    private fb: FormBuilder,
+    private mapviewService: MapviewService
+  ) {}
 
   // أيقونات الماركر
   private trafficIcon = L.icon({
@@ -60,10 +63,13 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     this.loadServerData();
 
     // احسب الأحمر تلقائيًا (أحمر = أخضر + أصفر)
-    this.trafficForm.get('greenTime')?.valueChanges.subscribe(() => this.calculateRedTime());
-    this.trafficForm.get('amberTime')?.valueChanges.subscribe(() => this.calculateRedTime());
+    this.trafficForm
+      .get('greenTime')
+      ?.valueChanges.subscribe(() => this.calculateRedTime());
+    this.trafficForm
+      .get('amberTime')
+      ?.valueChanges.subscribe(() => this.calculateRedTime());
 
-    // عند تغيير التمبلِت طبّق أزمنة لو موجودة
     this.trafficForm.get('template')?.valueChanges.subscribe((value) => {
       this.handleTemplateChange(value);
     });
@@ -83,7 +89,9 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     this.initMap();
 
     // ماركر افتراضي مربوط بالحقول (القاهرة)
-    this.editMarker = L.marker([30.0444, 31.2357], { icon: this.trafficIcon }).addTo(this.map);
+    this.editMarker = L.marker([30.0444, 31.2357], {
+      icon: this.trafficIcon,
+    }).addTo(this.map);
     this.map.setView([30.0444, 31.2357], 13);
 
     // اربط الحقول لتحريك الماركر تلقائيًا
@@ -100,12 +108,18 @@ export class MapviewComponent implements OnInit, AfterViewInit {
       area: ['', Validators.required],
       name: ['', [Validators.required, Validators.minLength(2)]],
       latitude: ['', [Validators.required, this.latitudeValidator.bind(this)]],
-      longitude: ['', [Validators.required, this.longitudeValidator.bind(this)]],
+      longitude: [
+        '',
+        [Validators.required, this.longitudeValidator.bind(this)],
+      ],
       ipAddress: ['', [Validators.required, this.ipValidator.bind(this)]],
       template: ['0'],
       greenTime: [30, [Validators.min(0), Validators.max(1000)]],
       amberTime: [10, [Validators.min(0), Validators.max(1000)]],
-      redTime: [{ value: 40, disabled: true }, [Validators.min(0), Validators.max(1000)]],
+      redTime: [
+        { value: 40, disabled: true },
+        [Validators.min(0), Validators.max(1000)],
+      ],
     });
   }
 
@@ -156,7 +170,9 @@ export class MapviewComponent implements OnInit, AfterViewInit {
 
   private updateEditMarker(lat: number, lng: number): void {
     if (!this.editMarker) {
-      this.editMarker = L.marker([lat, lng], { icon: this.trafficIcon }).addTo(this.map);
+      this.editMarker = L.marker([lat, lng], { icon: this.trafficIcon }).addTo(
+        this.map
+      );
     } else {
       this.editMarker.setLatLng([lat, lng]);
     }
@@ -165,48 +181,35 @@ export class MapviewComponent implements OnInit, AfterViewInit {
 
   // ================= Template Change Logic =================
   private handleTemplateChange(templateId: string | number): void {
-    const id = typeof templateId === 'string' ? parseInt(templateId, 10) : templateId;
+    const id =
+      typeof templateId === 'string' ? parseInt(templateId, 10) : templateId;
     if (!id || id === 0) {
       this.calculateRedTime();
       return;
     }
-
-    // أولوية: بيانات الأزمنة من templatePatterns لو متوفرة
-    const foundPattern = this.templatePatterns?.find((p: any) => +p.TemplateID === +id) ?? null;
-    if (foundPattern) {
-      const g = Number(foundPattern.Green ?? foundPattern.G ?? 30);
-      const a = Number(foundPattern.Amber ?? foundPattern.A ?? 10);
-      const r = Number(foundPattern.Red ?? foundPattern.R ?? g + a);
-      this.trafficForm.patchValue({ greenTime: g, amberTime: a, redTime: r }, { emitEvent: false });
-      return;
-    }
-
-    // بديل: لو templates نفسها فيها الأزمنة
-    const t = this.templates?.find((x) => +(<any>x).ID === +id) as any;
-    if (t && (t.Green !== undefined || t.Amber !== undefined || t.Red !== undefined)) {
-      const g = Number(t.Green ?? 30);
-      const a = Number(t.Amber ?? 10);
-      const r = Number(t.Red ?? g + a);
-      this.trafficForm.patchValue({ greenTime: g, amberTime: a, redTime: r }, { emitEvent: false });
-      return;
-    }
-
-    this.calculateRedTime();
   }
 
   // ================= Validators =================
   private latitudeValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
-    if (value === null || value === undefined || value === '') return { invalidLatitude: true };
+    if (value === null || value === undefined || value === '')
+      return { invalidLatitude: true };
     const num = Number(String(value).replace(',', '.'));
-    return Number.isFinite(num) && num >= -90 && num <= 90 ? null : { invalidLatitude: true };
+    return Number.isFinite(num) && num >= -90 && num <= 90
+      ? null
+      : { invalidLatitude: true };
   }
 
-  private longitudeValidator(control: AbstractControl): ValidationErrors | null {
+  private longitudeValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
     const value = control.value;
-    if (value === null || value === undefined || value === '') return { invalidLongitude: true };
+    if (value === null || value === undefined || value === '')
+      return { invalidLongitude: true };
     const num = Number(String(value).replace(',', '.'));
-    return Number.isFinite(num) && num >= -180 && num <= 180 ? null : { invalidLongitude: true };
+    return Number.isFinite(num) && num >= -180 && num <= 180
+      ? null
+      : { invalidLongitude: true };
   }
 
   private ipValidator(control: AbstractControl): ValidationErrors | null {
@@ -220,7 +223,9 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   private calculateRedTime(): void {
     const green = Number(this.trafficForm.get('greenTime')?.value) || 0;
     const amber = Number(this.trafficForm.get('amberTime')?.value) || 0;
-    this.trafficForm.get('redTime')?.setValue(green + amber, { emitEvent: false });
+    this.trafficForm
+      .get('redTime')
+      ?.setValue(green + amber, { emitEvent: false });
   }
 
   // ================= Data Loading =================
@@ -228,7 +233,7 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     this.loadGovernorates();
     this.loadAreasList();
     this.loadTemplates();
-    this.loadPatterns();
+    //this.loadPatterns();
     this.loadTemplatePatterns();
     this.loadLocations(); // دي اللي بترسم الماركرات من الـ API
   }
@@ -264,26 +269,29 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private loadPatterns(): void {
-    this.mapviewService.getPatterns().subscribe({
-      next: (data: any) => (this.lightPatterns = data || []),
-      error: (error: any) => console.error('Error loading patterns:', error),
-    });
-  }
+  // private loadPatterns(): void {
+  //   this.mapviewService.getPatterns().subscribe({
+  //     next: (data: any) => (this.lightPatterns = data || []),
+  //     error: (error: any) => console.error('Error loading patterns:', error),
+  //   });
+  // }
 
   private loadTemplatePatterns(): void {
     this.mapviewService.getTemplatePatterns().subscribe({
       next: (data: any) => (this.templatePatterns = data || []),
-      error: (error: any) => console.error('Error loading template patterns:', error),
+      error: (error: any) =>
+        console.error('Error loading template patterns:', error),
     });
   }
 
   loadLocations(): void {
     this.mapviewService.getLocations().subscribe({
       next: (data: any) => {
-        console.log("data is here " +data)
+        console.log('data is here ' + data);
         // لازم service يرجّع بيانات SigneControlBox من: http://192.168.1.43/api/get/control-box
-        this.locations = Array.isArray(data) ? data : data?.data || data?.result || [];
+        this.locations = Array.isArray(data)
+          ? data
+          : data?.data || data?.result || [];
         this.addLocationMarkers();
       },
       error: (err) => console.error('Error loading locations:', err),
@@ -306,9 +314,9 @@ export class MapviewComponent implements OnInit, AfterViewInit {
       const marker = L.marker([lat, lng], { icon: this.trafficIcon })
         .addTo(this.map)
         .bindPopup(
-          `<b>${location.Name || ''}</b><br/>IP: ${location.IPAddress || ''}<br/>Lat: ${lat.toFixed(
-            6
-          )} • Lng: ${lng.toFixed(6)}`
+          `<b>${location.Name || ''}</b><br/>IP: ${
+            location.IPAddress || ''
+          }<br/>Lat: ${lat.toFixed(6)} • Lng: ${lng.toFixed(6)}`
         );
 
       marker.on('click', () => {
@@ -324,7 +332,10 @@ export class MapviewComponent implements OnInit, AfterViewInit {
       bounds.push([lat, lng]);
     });
 
-    if (bounds.length) this.map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [30, 30] });
+    if (bounds.length)
+      this.map.fitBounds(bounds as L.LatLngBoundsExpression, {
+        padding: [30, 30],
+      });
   }
 
   private populateFormWithLocation(location: Location): void {
@@ -350,7 +361,8 @@ export class MapviewComponent implements OnInit, AfterViewInit {
     // حرّك ماركر التحرير لنفس المكان
     const lat = Number(String(location.Latitude).replace(',', '.'));
     const lng = Number(String(location.Longitude).replace(',', '.'));
-    if (Number.isFinite(lat) && Number.isFinite(lng)) this.updateEditMarker(lat, lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng))
+      this.updateEditMarker(lat, lng);
   }
 
   // ================= UI Handlers =================
@@ -395,7 +407,9 @@ export class MapviewComponent implements OnInit, AfterViewInit {
         },
         error: (error: any) => {
           console.error(error);
-          alert('Failed to save location: ' + (error?.message || 'Unknown error'));
+          alert(
+            'Failed to save location: ' + (error?.message || 'Unknown error')
+          );
         },
       });
     } else {
@@ -410,14 +424,20 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   }
 
   deleteLocation(): void {
-    if (this.selectedLocation && confirm('Are you sure you want to delete this location?')) {
+    if (
+      this.selectedLocation &&
+      confirm('Are you sure you want to delete this location?')
+    ) {
       this.mapviewService.deleteLocation(this.selectedLocation.ID).subscribe({
         next: () => {
           alert('Location deleted successfully!');
           this.selectedLocation = null;
           this.loadLocations();
         },
-        error: (err) => alert('Failed to delete location: ' + (err?.message || 'Unknown error')),
+        error: (err) =>
+          alert(
+            'Failed to delete location: ' + (err?.message || 'Unknown error')
+          ),
       });
     }
   }
@@ -430,5 +450,46 @@ export class MapviewComponent implements OnInit, AfterViewInit {
   private getAreaName(id: number): string {
     const area = this.areas.find((a) => a.ID === id);
     return area ? area.Name : '';
+  }
+
+  // ================= Template Pattern Loading =================
+  onTemplateSelect(templateId: string | number): void {
+    const id =
+      typeof templateId === 'string' ? parseInt(templateId, 10) : templateId;
+
+    if (id === 0) {
+      this.lightPatterns = [];
+      this.trafficForm.patchValue(
+        { greenTime: null, amberTime: null, redTime: null },
+        { emitEvent: false }
+      );
+      return;
+    }
+
+    this.mapviewService.getTemplatePatternById(id).subscribe({
+      next: (patterns) => {
+        console.log('Loaded template patterns:', patterns);
+        if (patterns && patterns.length > 0) {
+          this.lightPatterns = patterns;
+
+          const first = patterns[0];
+          if (first) {
+            const g = Number(first.Green ?? 30);
+            const a = Number(first.Amber ?? 10);
+            const r = Number(first.Red ?? g + a);
+            this.trafficForm.patchValue(
+              { greenTime: g, amberTime: a, redTime: r },
+              { emitEvent: false }
+            );
+          }
+        } else {
+          this.calculateRedTime();
+        }
+      },
+      error: (err) => {
+        console.error('Error loading template pattern:', err);
+        this.calculateRedTime();
+      },
+    });
   }
 }

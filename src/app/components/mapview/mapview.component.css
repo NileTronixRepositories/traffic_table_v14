@@ -229,3 +229,123 @@
     width: 100%;
   }
 }
+.template-patterns-section {
+  margin-top: 1.5rem;
+}
+
+.template-patterns-header {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3498db;
+}
+
+.pattern-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+  flex-wrap: nowrap;
+}
+
+.pattern-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* border-color: #3498db; */
+}
+
+.pattern-icon {
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.pattern-icon img {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
+}
+
+.pattern-badge {
+  background: linear-gradient(135deg, #3498db, #2980b9) !important;
+  padding: 0.4em 0.8em;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.pattern-time {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.pattern-time:before {
+  content: "🕒";
+  margin-right: 0.3rem;
+  font-size: 0.8rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .pattern-item {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .pattern-badge {
+    margin-right: 0.5rem;
+  }
+
+  .pattern-time {
+    margin-right: 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .pattern-item {
+    padding: 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .pattern-icon {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .pattern-badge {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .pattern-time {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pattern-item {
+  animation: slideIn 0.3s ease-out;
+}

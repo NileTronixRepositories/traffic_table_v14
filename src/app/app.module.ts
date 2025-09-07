@@ -11,6 +11,7 @@ import { MapviewComponent } from './components/mapview/mapview.component';
 import { PointconfigComponent } from './components/pointconfig/pointconfig.component';
 import { TemplateComponent } from './components/template/template.component';
 import { HeaderComponent } from './components/header/header.component';
+import { TrafficPointConfigComponent } from './components/traffic-point-config/traffic-point-config.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { HeaderComponent } from './components/header/header.component';
     PointconfigComponent,
     TemplateComponent,
     HeaderComponent,
+    TrafficPointConfigComponent,
   ],
   imports: [
     BrowserModule,

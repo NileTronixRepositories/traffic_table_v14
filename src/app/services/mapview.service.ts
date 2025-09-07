@@ -45,4 +45,9 @@ export class MapviewService {
   getTemplates(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/Template/list`);
   }
+  getTemplatePatternById(templateId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.baseUrl}/SelectTemplatePattern?id=${templateId}`
+    );
+  }
 }
