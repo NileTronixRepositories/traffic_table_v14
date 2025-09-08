@@ -1,12 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { interval } from 'rxjs';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { TrafficPointConfigService, SetLocationRequest } from 'src/app/services/traffic-point-config.service';
+import {
+  TrafficPointConfigService,
+  SetLocationRequest,
+} from 'src/app/services/traffic-point-config.service';
 
-interface NamedEntity { ID: number; Name: string; }
+interface NamedEntity {
+  ID: number;
+  Name: string;
+}
 interface Pattern extends NamedEntity {
-  Red?: number; Amber?: number; Green?: number;
-  RedDuration?: number; AmberDuration?: number; GreenDuration?: number;
+  Red?: number;
+  Amber?: number;
+  Green?: number;
+  RedDuration?: number;
+  AmberDuration?: number;
+  GreenDuration?: number;
 }
 
 @Component({
@@ -25,22 +35,69 @@ export class TrafficPointConfigComponent implements OnInit {
   templatePatterns: any[] = [];
 
   // للعرض فقط
-  GreenCount = 0; RedCount = 0; YellowCount = 0;
+  GreenCount = 0;
+  RedCount = 0;
+  YellowCount = 0;
 
   // selections خارجية/من Grid
   currentSignID = 0;
   currentTempID = 0;
   currentPatternID = 0;
 
-  // runtime (اختياري)
-  run = false; red = 0; yellow = 0; green = 0;
+  // blink
+  isActive = true;
+  lastOutputChangeTime = 0;
+  lastOutputCheckTime = 0;
+  blinkInterval = 500;
+  SECOND = 1000;
 
-  constructor(private fb: FormBuilder, private svc: TrafficPointConfigService) {}
+  //blink states
+  blinkRedActive = true;
+  blinkAmberActive = true;
+  blinkGreenActive = true;
+
+  // runtime
+  run = false;
+  red = 0;
+  yellow = 0;
+  green = 0;
+  currentColor: string | null = null;
+
+  get lights() {
+    return [
+      {
+        color: 'red',
+        icon: 'r.png',
+        blink: 'blinkRed',
+        active: this.blinkRedActive,
+        value: this.red,
+      },
+      {
+        color: 'yellow',
+        icon: 'a.png',
+        blink: 'blinkYellow',
+        active: this.blinkAmberActive,
+        value: this.yellow,
+      },
+      {
+        color: 'green',
+        icon: 'g.png',
+        blink: 'blinkGreen',
+        active: this.blinkGreenActive,
+        value: this.green,
+      },
+    ];
+  }
+
+  constructor(
+    private fb: FormBuilder,
+    private svc: TrafficPointConfigService
+  ) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      governorate: [null as NamedEntity | null], // ← object binding
-      area: [null as NamedEntity | null],        // ← object binding
+      governorate: [null as NamedEntity | null],
+      area: [null as NamedEntity | null],
       name: [''],
       latitude: [0],
       longitude: [0],
@@ -71,30 +128,39 @@ export class TrafficPointConfigComponent implements OnInit {
     this.form.get('pattern')!.valueChanges.subscribe((p: Pattern | null) => {
       if (!p) {
         this.currentPatternID = 0;
-        this.form.patchValue({ red: 0, yellow: 0, green: 0 }, { emitEvent: false });
+        this.form.patchValue(
+          { red: 0, yellow: 0, green: 0 },
+          { emitEvent: false }
+        );
         this.RedCount = this.YellowCount = this.GreenCount = 0;
         return;
       }
-      const red   = p.RedDuration   ?? p.Red   ?? 0;
+      const red = p.RedDuration ?? p.Red ?? 0;
       const amber = p.AmberDuration ?? p.Amber ?? 0;
       const green = p.GreenDuration ?? p.Green ?? 0;
 
       this.form.patchValue({ red, yellow: amber, green }, { emitEvent: false });
-      this.RedCount = red; this.YellowCount = amber; this.GreenCount = green;
+      this.RedCount = red;
+      this.YellowCount = amber;
+      this.GreenCount = green;
       this.currentPatternID = p.ID;
     });
 
     // محاكي عدّ تنازلي (اختياري)
-    interval(200).subscribe(() => { if (this.run) this.play(); });
+    interval(200).subscribe(() => {
+      if (this.run) this.play();
+    });
   }
 
   loadServerData() {
-    this.svc.getGovernorates().subscribe(g => (this.governorates = g));
-    this.svc.getAreas().subscribe(a => (this.areas = a));
-    this.svc.getLocations().subscribe(l => (this.locations = l));
-    this.svc.getTemplates().subscribe(t => (this.templates = t));
-    this.svc.getPatterns().subscribe(p => (this.patterns = p as Pattern[]));
-    this.svc.getTemplatePatterns().subscribe(tp => (this.templatePatterns = tp));
+    this.svc.getGovernorates().subscribe((g) => (this.governorates = g));
+    this.svc.getAreas().subscribe((a) => (this.areas = a));
+    this.svc.getLocations().subscribe((l) => (this.locations = l));
+    this.svc.getTemplates().subscribe((t) => (this.templates = t));
+    this.svc.getPatterns().subscribe((p) => (this.patterns = p as Pattern[]));
+    this.svc
+      .getTemplatePatterns()
+      .subscribe((tp) => (this.templatePatterns = tp));
   }
 
   runCommand() {
@@ -106,9 +172,52 @@ export class TrafficPointConfigComponent implements OnInit {
   }
   play() {
     if (!this.run) return;
-    if (this.green > 0) { this.green--; return; }
-    if (this.yellow > 0) { this.yellow--; return; }
-    if (this.red > 0) { this.red--; return; }
+
+    const now = Date.now();
+
+    // Blink logic
+    if (now - this.lastOutputCheckTime >= this.blinkInterval) {
+      this.lights.forEach((light) => {
+        if (this.form.value[light.blink]) {
+          switch (light.color) {
+            case 'red':
+              this.blinkRedActive = !this.blinkRedActive;
+              break;
+            case 'yellow':
+              this.blinkAmberActive = !this.blinkAmberActive;
+              break;
+            case 'green':
+              this.blinkGreenActive = !this.blinkGreenActive;
+              break;
+          }
+        }
+      });
+      this.lastOutputCheckTime = now;
+    }
+
+    // Countdown logic
+    const colors: {
+      name: 'RED' | 'YELLOW' | 'GREEN';
+      key: 'red' | 'yellow' | 'green';
+    }[] = [
+      { name: 'GREEN', key: 'green' },
+      { name: 'YELLOW', key: 'yellow' },
+      { name: 'RED', key: 'red' },
+    ];
+
+    for (const c of colors) {
+      if (this[c.key] > 0) {
+        this.currentColor = c.name;
+        if (now - this.lastOutputChangeTime >= this.SECOND) {
+          this[c.key]--;
+          this.lastOutputChangeTime = now;
+        }
+        return; // stop after the first active color
+      }
+    }
+
+    // Stop the run when all timers are 0
+    this.currentColor = null;
     this.run = false;
   }
 

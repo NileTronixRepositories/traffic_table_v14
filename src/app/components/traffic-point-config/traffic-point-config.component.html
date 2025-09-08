@@ -28,22 +28,40 @@
       <!-- Name -->
       <div class="form-group">
         <label class="form-label required">Name</label>
-        <input formControlName="name" class="form-control" placeholder="Descriptive name" />
+        <input
+          formControlName="name"
+          class="form-control"
+          placeholder="Descriptive name"
+        />
       </div>
     </div>
 
     <div class="form-row">
       <div class="form-group">
         <label class="form-label required">Latitude</label>
-        <input type="number" formControlName="latitude" class="form-control" step="0.0001" />
+        <input
+          type="number"
+          formControlName="latitude"
+          class="form-control"
+          step="0.0001"
+        />
       </div>
       <div class="form-group">
         <label class="form-label required">Longitude</label>
-        <input type="number" formControlName="longitude" class="form-control" step="0.0001" />
+        <input
+          type="number"
+          formControlName="longitude"
+          class="form-control"
+          step="0.0001"
+        />
       </div>
       <div class="form-group">
         <label class="form-label required">IP Address</label>
-        <input formControlName="ipAddress" class="form-control" placeholder="192.168.1.50" />
+        <input
+          formControlName="ipAddress"
+          class="form-control"
+          placeholder="192.168.1.50"
+        />
       </div>
     </div>
 
@@ -62,24 +80,80 @@
 
       <div class="light-intervals">
         <div class="light-control">
-          <img src="assets/img/g.png" height="50" alt="Green" class="light-icon" />
+          <img
+            src="assets/img/g.png"
+            height="50"
+            alt="Green"
+            class="light-icon"
+          />
           <label class="light-label">GREEN</label>
-          <input type="number" formControlName="green" class="time-input" min="0" max="255" />
+          <input
+            type="number"
+            formControlName="green"
+            class="time-input"
+            min="0"
+            max="255"
+          />
           <span class="time-unit">sec</span>
         </div>
 
         <div class="light-control">
-          <img src="assets/img/a.png" height="50" alt="Yellow" class="light-icon" />
+          <img
+            src="assets/img/a.png"
+            height="50"
+            alt="Yellow"
+            class="light-icon"
+          />
           <label class="light-label">YELLOW</label>
-          <input type="number" formControlName="yellow" class="time-input" min="0" max="255" />
+          <input
+            type="number"
+            formControlName="yellow"
+            class="time-input"
+            min="0"
+            max="255"
+          />
           <span class="time-unit">sec</span>
         </div>
 
         <div class="light-control">
-          <img src="assets/img/r.png" height="50" alt="Red" class="light-icon" />
+          <img
+            src="assets/img/r.png"
+            height="50"
+            alt="Red"
+            class="light-icon"
+          />
           <label class="light-label">RED</label>
-          <input type="number" formControlName="red" class="time-input" min="0" max="255" />
+          <input
+            type="number"
+            formControlName="red"
+            class="time-input"
+            min="0"
+            max="255"
+          />
           <span class="time-unit">sec</span>
+        </div>
+      </div>
+
+      <!-- Current Status -->
+      <div class="current-status">
+        <h4>Current Status</h4>
+        <div class="status-display">
+          <div class="status-values">
+            <span *ngFor="let light of lights">
+              <img
+                [src]="'assets/img/' + light.icon"
+                height="50"
+                [alt]="(light.color | titlecase) + ' Light'"
+                class="light-icon"
+                [style.filter]="
+                  form.value[light.blink] && !light.active
+                    ? 'grayscale(1)'
+                    : 'grayscale(0)'
+                "
+              />
+              : {{ light.value }}s
+            </span>
+          </div>
         </div>
       </div>
 
@@ -104,7 +178,12 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Blink (ms)</label>
-            <input type="number" formControlName="blinkMs" class="form-control" placeholder="500" />
+            <input
+              type="number"
+              formControlName="blinkMs"
+              class="form-control"
+              placeholder="500"
+            />
           </div>
         </div>
       </div>
@@ -115,22 +194,6 @@
           <input type="checkbox" formControlName="toggleMain" />
           <span class="slider"></span> Toggle main-set
         </label>
-      </div>
-    </div>
-
-    <!-- Transport options -->
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Use TCP</label>
-        <input type="checkbox" formControlName="useTcp" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">TCP Port</label>
-        <input type="number" formControlName="tcpPort" class="form-control" placeholder="502" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Device ID</label>
-        <input type="number" formControlName="deviceId" class="form-control" placeholder="(optional)" />
       </div>
     </div>
 
