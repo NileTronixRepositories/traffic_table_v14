@@ -12,9 +12,9 @@
           <div class="card-body">
             <form [formGroup]="patternForm" class="pattern-section">
               <div class="mb-3">
-                <label for="patternList" class="form-label fw-bold">
-                  Select Pattern
-                </label>
+                <label for="patternList" class="form-label fw-bold"
+                  >Select Pattern</label
+                >
                 <select
                   class="form-select shadow-sm"
                   id="patternList"
@@ -25,15 +25,13 @@
                   </option>
                 </select>
 
-                <select
-                  class="form-select shadow-sm"
-                  id="templateList"
-                  formControlName="templateList"
-                >
-                  <option *ngFor="let t of templates" [value]="t.ID">
-                    {{ t.Name }}
-                  </option>
-                </select>
+                <input
+                  type="text"
+                  class="form-control mt-2"
+                  id="patternName"
+                  formControlName="name"
+                  placeholder="Enter pattern name"
+                />
               </div>
 
               <div class="row mb-3 g-2">
@@ -119,6 +117,13 @@
                 >
                   <i class="bi bi-plus-circle"></i> Add to Template
                 </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="deletePattern()"
+                >
+                  <i class="bi bi-trash"></i> Delete Pattern
+                </button>
               </div>
             </form>
           </div>
@@ -138,8 +143,8 @@
                   >Select Template</label
                 >
                 <select
-                  class="form-select"
                   id="templateList"
+                  class="form-select"
                   formControlName="templateList"
                 >
                   <option *ngFor="let t of templates" [value]="t.ID">

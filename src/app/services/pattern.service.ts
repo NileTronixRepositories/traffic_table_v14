@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { Pattern } from '../model/pattern';
 
@@ -24,18 +24,38 @@ export class PatternService {
     );
   }
 
-  updatePattern(p: Pattern): Observable<any> {
-    const params: any = {
-      ID: p.ID,
-      Name: p.Name,
-      R: p.RedDuration,
-      A: p.AmberDuration,
-      G: p.GreenDuration,
-    };
+  savePattern(p: any) {
+    let params = new HttpParams()
+      .set('ID', p.patternList ?? 0)
+      .set('Name', p.name ?? '')
+      .set('R', p.red ?? 0)
+      .set('A', p.amber ?? 0)
+      .set('G', p.green ?? 0);
 
     return this.http.get(`${this.baseUrl}/Pattern/Set`, {
       params,
       responseType: 'text',
     });
+  }
+
+  deletePattern(id: number): Observable<any> {
+    const params: any = {
+      ID: -id,
+      Name: '',
+      R: 0,
+      A: 0,
+      G: 0,
+    };
+    return this.http.get(`${this.baseUrl}/Pattern/Set`, {
+      params,
+      responseType: 'text',
+    });
+  }
+  updatePattern(pattern: any): Observable<any> {
+    if (pattern.ID && pattern.ID > 0) {
+      return this.http.put(`${this.baseUrl}/Pattern/Set`, pattern);
+    } else {
+      return this.http.post(`${this.baseUrl}/Pattern/Set`, pattern);
+    }
   }
 }

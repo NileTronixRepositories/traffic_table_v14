@@ -79,40 +79,33 @@ export class TemplateComponent implements OnInit {
 
   // =================== Lifecycle ===================
   ngOnInit(): void {
-    this.loadAll();
+    this.loadPatterns();
 
-    // زي TrafficPointConfig — valueChanges للـ pattern
     this.patternListControl.valueChanges.subscribe((id: number) => {
       const p = this.patterns.find((x) => x.ID === id);
       if (!p) {
         this.currentPatternID = 0;
-        this.templateForm.patchValue(
-          { red: 0, yellow: 0, green: 0 },
+        this.patternForm.patchValue(
+          { name: '', red: 0, amber: 0, green: 0 },
           { emitEvent: false }
         );
         this.RedCount = this.YellowCount = this.GreenCount = 0;
         return;
       }
+
       const red = p.RedDuration ?? 0;
       const amber = p.AmberDuration ?? 0;
       const green = p.GreenDuration ?? 0;
 
-      this.templateForm.patchValue(
-        { red, yellow: amber, green },
+      this.patternForm.patchValue(
+        { name: p.Name, red, amber, green },
         { emitEvent: false }
       );
+
       this.RedCount = red;
       this.YellowCount = amber;
       this.GreenCount = green;
       this.currentPatternID = p.ID;
-    });
-
-    this.templateListControl.valueChanges.subscribe((id: number) =>
-      this.updateTemplateForm(id)
-    );
-
-    interval(200).subscribe(() => {
-      if (this.run) this.play();
     });
   }
 
@@ -144,7 +137,6 @@ export class TemplateComponent implements OnInit {
   private updateTemplateForm(id: number): void {
     this.selectedTemplateId = +id || 0;
     const t = this.templates.find((x) => x.ID === this.selectedTemplateId);
-
     if (!t) {
       this.resetTemplateForm();
       return;
@@ -206,29 +198,27 @@ export class TemplateComponent implements OnInit {
     );
 
     this.templateService.saveTemplate(template, rows).subscribe({
-      next: () => this.loadTemplates(),
-      error: (err) => console.error('Save template failed:', err),
+      next: () => {
+        alert('Template saved successfully!');
+        this.loadTemplates();
+      },
+      error: (err) => {
+        console.error('Save template failed:', err);
+        alert('Failed to save template!');
+      },
     });
   }
-
-  private loadTemplates(): void {
+  loadTemplates(): void {
     this.templateService.getTemplates().subscribe({
-      next: (templates) => {
-        this.templates = templates;
-
-        if (
-          this.templates.length > 0 &&
-          !this.templateForm.value.templateList
-        ) {
-          const first = this.templates[0];
-          this.templateForm.patchValue({
-            templateList: first.ID,
-            name: first.Name,
-          });
-          this.updateTemplateForm(first.ID);
+      next: (data) => {
+        this.templates = data;
+        if (this.templates.length > 0) {
+          this.templateForm.get('templateList')?.setValue(this.templates[0].ID);
         }
       },
-      error: (err) => console.error('Error loading templates:', err),
+      error: (err) => {
+        console.error('Failed to load templates:', err);
+      },
     });
   }
 
@@ -299,19 +289,17 @@ export class TemplateComponent implements OnInit {
     }
   }
 
-  savePattern(): void {
-    const v = this.patternForm.value;
-    const pattern: Pattern = {
-      ID: v.patternList,
-      Name: v.name,
-      RedDuration: v.red,
-      AmberDuration: v.amber,
-      GreenDuration: v.green,
-    };
-
-    this.patternService.updatePattern(pattern).subscribe({
-      next: () => this.loadPatterns(),
-      error: (err) => console.error('Save pattern failed', err),
+  savePattern() {
+    const p = this.patternForm.value;
+    this.patternService.savePattern(p).subscribe({
+      next: () => {
+        alert('Pattern saved successfully!');
+        this.loadPatterns();
+      },
+      error: (err) => {
+        console.error(err);
+        alert('Failed to save pattern!');
+      },
     });
   }
 
@@ -341,6 +329,19 @@ export class TemplateComponent implements OnInit {
       amber: 10,
       green: 30,
       blink: false,
+    });
+  }
+  deletePattern() {
+    const id = this.patternForm.value.patternList;
+    if (!id) return;
+
+    this.patternService.deletePattern(id).subscribe({
+      next: (res) => {
+        console.log('Pattern deleted', res);
+        this.loadPatterns();
+        this.patternForm.reset();
+      },
+      error: (err) => console.error(err),
     });
   }
 }

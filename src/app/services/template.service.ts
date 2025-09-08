@@ -17,7 +17,7 @@ export class TemplateService {
   }
 
   saveTemplate(template: Template, rows: TemplatePattern[]): Observable<any> {
-    let params = new URLSearchParams();
+    const params = new URLSearchParams();
     params.set('ID', template.ID.toString());
     params.set('Name', template.Name);
 
