@@ -8,6 +8,7 @@ import { TrafficPointConfigComponent } from './components/traffic-point-config/t
 
 const routes: Routes = [
   { path: '', redirectTo: '/map', pathMatch: 'full' },
+  { path: '**', redirectTo: '/map', pathMatch: 'full' },
   { path: 'map', component: DirComponent },
   { path: 'TrafficSignal', component: TrafficSignalComponent },
   { path: 'mapview', component: MapviewComponent },
