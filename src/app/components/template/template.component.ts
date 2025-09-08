@@ -178,17 +178,17 @@ export class TemplateComponent implements OnInit {
     const selectedPattern = this.patterns.find((p) => p.ID === v.patternList);
     const templateID = this.templateForm.value.templateList;
 
-    if (!selectedPattern || !templateID) {
-      console.warn('Please select both pattern and template');
+    if (!selectedPattern || !templateID || selectedPattern.ID === 0) {
+      console.warn('Please select a valid pattern and template');
       return;
     }
 
     this.patternsArray.push(
       this.fb.group({
-        PatternID: [selectedPattern.ID],
+        PatternID: [selectedPattern.ID, Validators.required],
         Name: [selectedPattern.Name],
         StartFrom: ['00:00:00'],
-        FinishBy: ['00:00:00'],
+        FinishBy: ['23:59:00'],
       })
     );
   }
@@ -200,7 +200,10 @@ export class TemplateComponent implements OnInit {
   saveTemplate(): void {
     const v = this.templateForm.value;
     const template: Template = { ID: v.templateList, Name: v.name };
-    const rows: TemplatePattern[] = this.patternsArray.value;
+
+    const rows: TemplatePattern[] = this.patternsArray.value.filter(
+      (p: TemplatePattern) => p.PatternID && p.PatternID > 0
+    );
 
     this.templateService.saveTemplate(template, rows).subscribe({
       next: () => this.loadTemplates(),
@@ -212,6 +215,7 @@ export class TemplateComponent implements OnInit {
     this.templateService.getTemplates().subscribe({
       next: (templates) => {
         this.templates = templates;
+
         if (
           this.templates.length > 0 &&
           !this.templateForm.value.templateList

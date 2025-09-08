@@ -25,13 +25,17 @@ export class PatternService {
   }
 
   updatePattern(p: Pattern): Observable<any> {
-    const payload = {
+    const params: any = {
       ID: p.ID,
       Name: p.Name,
       R: p.RedDuration,
       A: p.AmberDuration,
       G: p.GreenDuration,
     };
-    return this.http.post(`${this.baseUrl}/Pattern/Set`, payload);
+
+    return this.http.get(`${this.baseUrl}/Pattern/Set`, {
+      params,
+      responseType: 'text',
+    });
   }
 }

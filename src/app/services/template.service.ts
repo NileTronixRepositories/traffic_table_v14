@@ -16,24 +16,22 @@ export class TemplateService {
     return this.http.get<Template[]>(`${this.baseUrl}/Template/list`);
   }
 
-  /** Save or Delete Template */
-  saveTemplate(
-    template: Template,
-    patterns: TemplatePattern[]
-  ): Observable<any> {
-    // ⚡ delete = ID * -1
-    const payload = {
-      ID: template.ID,
-      Name: template.Name,
-      Patterns: patterns.map((p) => ({
-        LightPatternID: p.PatternID,
-        StartFrom: this.ensureHhMmSs(p.StartFrom),
-        FinishBy: this.ensureHhMmSs(p.FinishBy),
-      })),
-    };
-    return this.http.post(`${this.baseUrl}/Template/Set`, payload, {
-      responseType: 'text',
+  saveTemplate(template: Template, rows: TemplatePattern[]): Observable<any> {
+    let params = new URLSearchParams();
+    params.set('ID', template.ID.toString());
+    params.set('Name', template.Name);
+
+    rows.forEach((r, i) => {
+      params.set(
+        `Patterns[${i}].LightPatternID`,
+        r.PatternID?.toString() ?? ''
+      );
+      params.set(`Patterns[${i}].StartFrom`, this.ensureHhMmSs(r.StartFrom));
+      params.set(`Patterns[${i}].FinishBy`, this.ensureHhMmSs(r.FinishBy));
     });
+
+    const url = `${this.baseUrl}/Template/Set?${params.toString()}`;
+    return this.http.post(url, null);
   }
 
   // ============== Template Patterns (Schedules) ==============
@@ -47,7 +45,7 @@ export class TemplateService {
     templateID: number
   ): Observable<TemplatePattern[]> {
     return this.http.get<TemplatePattern[]>(
-      `${this.baseUrl}/SelectTemplatePattern/${templateID}`
+      `${this.baseUrl}/SelectTemplatePattern?id=${templateID}`
     );
   }
 
