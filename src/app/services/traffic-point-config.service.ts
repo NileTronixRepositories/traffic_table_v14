@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-/** مطابق لـ C# DTO */
 export interface SetLocationRequest {
   ID: number | null;
 
@@ -39,10 +38,6 @@ export interface SetLocationRequest {
 
 @Injectable({ providedIn: 'root' })
 export class TrafficPointConfigService {
-  // اختار واحد:
-  // 1) لو السيرفر بيطلع فعلاً /TLC/api/..: خليه كده
-  // private baseUrl = 'http://192.168.1.43/TLC/api';
-  // 2) لو أنضف من غير التكرار: خليه /TLC وازود /api/ في المسارات:
   private baseUrl = 'http://192.168.1.43/TLC';
 
   constructor(private http: HttpClient) {}

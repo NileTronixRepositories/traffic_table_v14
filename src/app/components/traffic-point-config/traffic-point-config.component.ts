@@ -146,7 +146,6 @@ export class TrafficPointConfigComponent implements OnInit {
       this.currentPatternID = p.ID;
     });
 
-    // محاكي عدّ تنازلي (اختياري)
     interval(200).subscribe(() => {
       if (this.run) this.play();
     });
@@ -212,7 +211,7 @@ export class TrafficPointConfigComponent implements OnInit {
           this[c.key]--;
           this.lastOutputChangeTime = now;
         }
-        return; // stop after the first active color
+        return;
       }
     }
 

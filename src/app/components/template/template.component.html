@@ -1,1 +1,220 @@
-<p>template works!</p>
+<div class="template-container">
+  <div class="container">
+    <h2 class="text-center mb-4">Light Pattern Template Manager</h2>
+
+    <div class="row">
+      <!-- Pattern Section -->
+      <div class="col-lg-6">
+        <div class="pattern-card card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Light Pattern</h5>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="patternForm" class="pattern-section">
+              <div class="mb-3">
+                <label for="patternList" class="form-label fw-bold">
+                  Select Pattern
+                </label>
+                <select
+                  class="form-select shadow-sm"
+                  id="patternList"
+                  formControlName="patternList"
+                >
+                  <option *ngFor="let p of patterns" [value]="p.ID">
+                    {{ p.Name }}
+                  </option>
+                </select>
+
+                <select
+                  class="form-select shadow-sm"
+                  id="templateList"
+                  formControlName="templateList"
+                >
+                  <option *ngFor="let t of templates" [value]="t.ID">
+                    {{ t.Name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="row mb-3 g-2">
+                <div class="col-md-4">
+                  <label
+                    for="greenValue"
+                    class="form-label d-flex align-items-center"
+                  >
+                    <img
+                      src="assets/img/g.png"
+                      alt="Green"
+                      class="traffic-icon me-2"
+                    />
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control time-input shadow-sm"
+                    id="greenValue"
+                    formControlName="green"
+                    min="0"
+                    max="255"
+                    placeholder="Sec"
+                  />
+                </div>
+
+                <div class="col-md-4">
+                  <label
+                    for="amberValue"
+                    class="form-label d-flex align-items-center"
+                  >
+                    <img
+                      src="assets/img/a.png"
+                      alt="Amber"
+                      class="traffic-icon me-2"
+                    />
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control time-input shadow-sm"
+                    id="amberValue"
+                    formControlName="amber"
+                    min="0"
+                    max="255"
+                    placeholder="Sec"
+                  />
+                </div>
+
+                <div class="col-md-4">
+                  <label
+                    for="redValue"
+                    class="form-label d-flex align-items-center"
+                  >
+                    <img
+                      src="assets/img/r.png"
+                      alt="Red"
+                      class="traffic-icon me-2"
+                    />
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control time-input shadow-sm"
+                    id="redValue"
+                    formControlName="red"
+                    min="0"
+                    max="255"
+                    placeholder="Sec"
+                  />
+                </div>
+              </div>
+
+              <div class="pattern-actions">
+                <button
+                  type="button"
+                  class="btn btn-pattern"
+                  (click)="savePattern()"
+                >
+                  <i class="bi bi-floppy"></i> Save Pattern
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  (click)="addPatternToTemplate()"
+                >
+                  <i class="bi bi-plus-circle"></i> Add to Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Template Section -->
+      <div class="col-lg-6">
+        <div class="template-card card">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-collection"></i> Templates</h5>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="templateForm" class="template-section">
+              <div class="mb-3">
+                <label for="templateList" class="form-label"
+                  >Select Template</label
+                >
+                <select
+                  class="form-select"
+                  id="templateList"
+                  formControlName="templateList"
+                >
+                  <option *ngFor="let t of templates" [value]="t.ID">
+                    {{ t.Name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="templateName" class="form-label"
+                  >Template Name</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="templateName"
+                  formControlName="name"
+                  placeholder="Enter template name"
+                />
+              </div>
+
+              <h6 class="mt-4 mb-3">Patterns in Template</h6>
+
+              <div formArrayName="patterns" class="patterns-list">
+                <div
+                  class="pattern-item"
+                  *ngFor="let p of patternsArray.controls; let i = index"
+                  [formGroupName]="i"
+                >
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
+                    <strong>{{ p.value.Name }}</strong>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-remove"
+                      (click)="removePatternFromTemplate(i)"
+                    >
+                      <i class="bi bi-trash"></i> Remove
+                    </button>
+                  </div>
+                  <div class="time-inputs d-flex gap-2">
+                    <div class="flex-grow-1">
+                      <label class="form-label">Start From</label>
+                      <input
+                        type="time"
+                        class="form-control"
+                        formControlName="StartFrom"
+                      />
+                    </div>
+                    <div class="flex-grow-1">
+                      <label class="form-label">Finish By</label>
+                      <input
+                        type="time"
+                        class="form-control"
+                        formControlName="FinishBy"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="template-actions mt-4">
+                <button
+                  type="button"
+                  class="btn btn-template"
+                  (click)="saveTemplate()"
+                >
+                  <i class="bi bi-floppy"></i> Save Template
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
