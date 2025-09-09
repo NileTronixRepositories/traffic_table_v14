@@ -1,17 +1,43 @@
 import { Component, OnInit } from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  FormControl,
-  FormArray,
-  Validators,
-} from '@angular/forms';
-import { TemplateService } from 'src/app/services/template.service';
-import { Template, TemplatePattern } from 'src/app/model/template';
-import { Pattern } from 'src/app/model/pattern';
-import { PatternService } from 'src/app/services/pattern.service';
-import { TrafficPointConfigService } from 'src/app/services/traffic-point-config.service';
-import { interval } from 'rxjs';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { HttpClient, HttpParams } from '@angular/common/http';
+
+interface PatternVm {
+  id: number;
+  name: string;
+  green: number;
+  amber: number;
+  red: number;
+}
+interface TemplateVm {
+  id: number;
+  name: string;
+}
+interface TemplateRow {
+  lightPatternID: number;
+  startFrom: string;  // "HH:mm" للعرض
+  finishBy: string;   // "HH:mm" للعرض
+  displayName?: string;
+}
+interface UpdateTemplatePattern {
+  lightPatternID: number;
+  startFrom: string;  // "HH:mm:ss"
+  finishBy: string;   // "HH:mm:ss"
+}
+interface UpdateTemplateReq {
+  id: number;
+  name: string;
+  patterns: UpdateTemplatePattern[];
+}
+
+/** DTO راجع من /api/TemplatePattern/list */
+interface TemplatePatternDto {
+  ID: number;
+  TemplateID: number;
+  PetternID: number;     // (اسم العمود فيه typo في الداتابيز)
+  StartFrom: string;     // غالبًا "HH:mm:ss"
+  FinishBy: string;      // غالبًا "HH:mm:ss"
+}
 
 @Component({
   selector: 'app-template',
@@ -19,329 +45,310 @@ import { interval } from 'rxjs';
   styleUrls: ['./template.component.css'],
 })
 export class TemplateComponent implements OnInit {
-  // Data
-  patterns: Pattern[] = [];
-  templates: Template[] = [];
-  templatePatterns: TemplatePattern[] = [];
+private baseUrl = 'http://localhost/TLC';
 
-  // State
+  // يسار: Light Pattern
+  patterns: PatternVm[] = [];
   selectedPatternId = 0;
-  selectedTemplateId = 0;
-  currentPatternID = 0;
-
-  // Counters (زي TrafficPointConfig)
-  RedCount = 0;
-  YellowCount = 0;
-  GreenCount = 0;
-  run = false;
-
-  // Forms
   patternForm: FormGroup;
-  templateForm: FormGroup;
 
-  constructor(
-    private fb: FormBuilder,
-    private patternService: PatternService,
-    private templateService: TemplateService,
-    private trafficPointConfigService: TrafficPointConfigService
-  ) {
-    // Pattern editor form
+  // يمين: Templates
+  templates: TemplateVm[] = [];
+  selectedTemplateId = 0;
+  templateNameCtrl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(200)] });
+  templateRows: TemplateRow[] = [];
+  readonly MAX_ROWS = 4;
+
+  // كل الـ TemplatePatterns (نجيبهم مرة ونفلتر)
+  allTemplatePatterns: TemplatePatternDto[] = [];
+
+  loading = false;
+  errorMsg = '';
+
+  constructor(private fb: FormBuilder, private http: HttpClient) {
     this.patternForm = this.fb.group({
-      patternList: [0, Validators.required],
-      name: ['', Validators.required],
-      red: [30, [Validators.required, Validators.min(0)]],
-      amber: [10, [Validators.required, Validators.min(0)]],
-      green: [30, [Validators.required, Validators.min(0)]],
-      blink: [false],
-    });
-
-    // Template editor form
-    this.templateForm = this.fb.group({
-      templateList: [0],
-      name: ['', Validators.required],
-      patterns: this.fb.array([]),
-      red: [30],
-      yellow: [10],
-      green: [30],
+      id: [0, [Validators.required]],
+      name: ['', [Validators.required, Validators.maxLength(200)]],
+      green: [30, [Validators.required, Validators.min(0), Validators.max(1000)]],
+      amber: [10, [Validators.required, Validators.min(0), Validators.max(1000)]],
+      red: [30, [Validators.required, Validators.min(0), Validators.max(1000)]],
     });
   }
 
-  // =================== Getters ===================
-  get patternsArray(): FormArray {
-    return this.templateForm.get('patterns') as FormArray;
-  }
-  get patternListControl(): FormControl {
-    return this.patternForm.get('patternList') as FormControl;
-  }
-  get templateListControl(): FormControl {
-    return this.templateForm.get('templateList') as FormControl;
-  }
-
-  // =================== Lifecycle ===================
   ngOnInit(): void {
-    this.loadPatterns();
-
-    this.patternListControl.valueChanges.subscribe((id: number) => {
-      const p = this.patterns.find((x) => x.ID === id);
-      if (!p) {
-        this.currentPatternID = 0;
-        this.patternForm.patchValue(
-          { name: '', red: 0, amber: 0, green: 0 },
-          { emitEvent: false }
-        );
-        this.RedCount = this.YellowCount = this.GreenCount = 0;
-        return;
-      }
-
-      const red = p.RedDuration ?? 0;
-      const amber = p.AmberDuration ?? 0;
-      const green = p.GreenDuration ?? 0;
-
-      this.patternForm.patchValue(
-        { name: p.Name, red, amber, green },
-        { emitEvent: false }
-      );
-
-      this.RedCount = red;
-      this.YellowCount = amber;
-      this.GreenCount = green;
-      this.currentPatternID = p.ID;
+    // نزّل الترتيب ده لضمان وجود الأسماء قبل ما نعمل resolve لأسماء الـ patterns
+    this.loadPatterns(() => {
+      this.loadTemplates(() => {
+        this.loadTemplatePatterns(() => {
+          // start with "new template"
+          this.onTemplateChanged(0);
+        });
+      });
     });
   }
 
-  // =================== Load ===================
-  private loadAll(): void {
-    this.patternService.getPatterns().subscribe((pats) => {
-      this.patterns = [
-        {
-          ID: 0,
-          Name: '- New Pattern -',
-          RedDuration: 30,
-          AmberDuration: 10,
-          GreenDuration: 30,
-        },
-        ...pats,
-      ];
-    });
-
-    this.templateService.getTemplates().subscribe((temps) => {
-      this.templates = [{ ID: 0, Name: '- New Template -' }, ...temps];
-    });
-
-    this.templateService.getTemplatePatterns().subscribe((rows) => {
-      this.templatePatterns = rows;
-    });
+  // ================= Utils =================
+  private toTimeSpan(v: string): string {
+    // "HH:mm" -> "HH:mm:ss"
+    if (!v) return '00:00:00';
+    const [hh = '00', mm = '00', ss = '00'] = v.split(':');
+    return `${hh.padStart(2, '0')}:${mm.padStart(2, '0')}:${(ss ?? '00').padStart(2, '0')}`;
   }
-
-  // =================== Template Editor ===================
-  private updateTemplateForm(id: number): void {
-    this.selectedTemplateId = +id || 0;
-    const t = this.templates.find((x) => x.ID === this.selectedTemplateId);
-    if (!t) {
-      this.resetTemplateForm();
-      return;
+  private fromTimeSpan(v: any): string {
+    // يحوّل أي شكل محتمل لواجهة عرض "HH:mm"
+    if (!v) return '00:00';
+    // ممكن ييجي "HH:mm:ss"
+    if (typeof v === 'string' && v.includes(':')) {
+      const parts = v.split(':'); // ["HH","mm","ss?"]
+      return `${(parts[0] ?? '00').padStart(2,'0')}:${(parts[1] ?? '00').padStart(2,'0')}`;
     }
+    // fallback
+    return '00:00';
+  }
+  private getPatternNameById(id: number) {
+    return this.patterns.find(p => p.id === id)?.name ?? '';
+  }
+  private handleError(e: any, fallback = 'Unexpected error.') {
+    console.error(e);
+    this.errorMsg = typeof e?.error === 'string' ? e.error : (e?.message ?? fallback);
+  }
 
-    this.templateForm.patchValue({ name: t.Name }, { emitEvent: false });
-
-    this.templateService
-      .getTemplatePatternsByTemplateId(this.selectedTemplateId)
-      .subscribe((rows) => {
-        const groups = rows.map((r) =>
-          this.fb.group({
-            ID: [r.ID],
-            TemplateID: [r.TemplateID],
-            PatternID: [r.PatternID, Validators.required],
-            Name: [
-              r.Name ||
-                this.patterns.find((p) => p.ID === r.PatternID)?.Name ||
-                '',
-            ],
-            StartFrom: [this.toHhMm(r.StartFrom), Validators.required],
-            FinishBy: [this.toHhMm(r.FinishBy), Validators.required],
-          })
-        );
-        this.templateForm.setControl('patterns', this.fb.array(groups));
+  // ================= Loaders =================
+  loadPatterns(done?: () => void): void {
+    this.loading = true;
+    this.http.get<any[]>(`${this.baseUrl}/api/Pattern/list`)
+      .subscribe({
+        next: res => {
+          const mapped: PatternVm[] = (res ?? []).map(x => ({
+            id: Number(x.ID ?? x.id ?? 0),
+            name: String(x.Name ?? x.name ?? ''),
+            green: Number(x.Green ?? x.green ?? 0),
+            amber: Number(x.Amber ?? x.amber ?? 0),
+            red: Number(x.Red ?? x.red ?? 0),
+          }));
+          const newItem: PatternVm = { id: 0, name: '- New Pattern -', green: 30, amber: 10, red: 30 };
+          this.patterns = [newItem, ...mapped];
+          this.onPatternChanged(0);
+          this.loading = false;
+          done?.();
+        },
+        error: err => { this.loading = false; this.handleError(err); done?.(); }
       });
   }
 
-  addPatternToTemplate(): void {
-    const v = this.patternForm.value;
-    const selectedPattern = this.patterns.find((p) => p.ID === v.patternList);
-    const templateID = this.templateForm.value.templateList;
-
-    if (!selectedPattern || !templateID || selectedPattern.ID === 0) {
-      console.warn('Please select a valid pattern and template');
-      return;
-    }
-
-    this.patternsArray.push(
-      this.fb.group({
-        PatternID: [selectedPattern.ID, Validators.required],
-        Name: [selectedPattern.Name],
-        StartFrom: ['00:00:00'],
-        FinishBy: ['23:59:00'],
-      })
-    );
-  }
-
-  removePatternFromTemplate(i: number): void {
-    this.patternsArray.removeAt(i);
-  }
-
-  saveTemplate(): void {
-    const v = this.templateForm.value;
-    const template: Template = { ID: v.templateList, Name: v.name };
-
-    const rows: TemplatePattern[] = this.patternsArray.value.filter(
-      (p: TemplatePattern) => p.PatternID && p.PatternID > 0
-    );
-
-    this.templateService.saveTemplate(template, rows).subscribe({
-      next: () => {
-        alert('Template saved successfully!');
-        this.loadTemplates();
-      },
-      error: (err) => {
-        console.error('Save template failed:', err);
-        alert('Failed to save template!');
-      },
-    });
-  }
-  loadTemplates(): void {
-    this.templateService.getTemplates().subscribe({
-      next: (data) => {
-        this.templates = data;
-        if (this.templates.length > 0) {
-          this.templateForm.get('templateList')?.setValue(this.templates[0].ID);
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load templates:', err);
-      },
-    });
-  }
-
-  private resetTemplateForm(): void {
-    this.templateForm.reset({ templateList: 0, name: '' });
-    this.patternsArray.clear();
-  }
-
-  // =================== Delete Template ===================
-  deleteTemplate(): void {
-    const template: Template = { ID: this.selectedTemplateId * -1, Name: '' };
-    this.templateService
-      .saveTemplate(template, [])
-      .subscribe(() => this.loadAll());
-  }
-
-  // =================== Utils ===================
-  private toHhMm(t: string): string {
-    if (!t) return '00:00';
-    const [h, m] = t.split(':');
-    return `${h.padStart(2, '0')}:${(m ?? '00').padStart(2, '0')}`;
-  }
-
-  private ensureHhMmSs(t: string): string {
-    if (!t) return '00:00:00';
-    const parts = t.split(':');
-    if (parts.length === 2)
-      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}:00`;
-    return `${parts[0].padStart(2, '0')}:${(parts[1] ?? '00').padStart(
-      2,
-      '0'
-    )}:${(parts[2] ?? '00').padStart(2, '0')}`;
-  }
-
-  play(): void {
-    if (!this.run) return;
-
-    if (this.GreenCount > 0) {
-      this.GreenCount--;
-      return;
-    }
-    if (this.YellowCount > 0) {
-      this.YellowCount--;
-      return;
-    }
-    if (this.RedCount > 0) {
-      this.RedCount--;
-      return;
-    }
-  }
-  // =================== Pattern Editor ===================
-  private updatePatternForm(id: number): void {
-    this.selectedPatternId = +id || 0;
-    const p = this.patterns.find((x) => x.ID === this.selectedPatternId);
-
-    if (p) {
-      this.patternForm.patchValue(
-        {
-          name: p.Name,
-          red: p.RedDuration ?? 30,
-          amber: p.AmberDuration ?? 10,
-          green: p.GreenDuration ?? 30,
+  loadTemplates(done?: () => void): void {
+    this.loading = true;
+    this.http.get<any[]>(`${this.baseUrl}/api/Template/list`)
+      .subscribe({
+        next: res => {
+          const mapped: TemplateVm[] = (res ?? []).map(x => ({
+            id: Number(x.ID ?? x.id ?? 0),
+            name: String(x.Name ?? x.name ?? ''),
+          }));
+          const newTemplate: TemplateVm = { id: 0, name: '- New Template -' };
+          this.templates = [newTemplate, ...mapped];
+          this.loading = false;
+          done?.();
         },
-        { emitEvent: false }
-      );
-    } else {
-      this.resetPatternForm();
+        error: err => { this.loading = false; this.handleError(err); done?.(); }
+      });
+  }
+
+  loadTemplatePatterns(done?: () => void): void {
+    this.loading = true;
+    this.http.get<TemplatePatternDto[]>(`${this.baseUrl}/api/TemplatePattern/list`)
+      .subscribe({
+        next: res => {
+          this.allTemplatePatterns = res ?? [];
+          this.loading = false;
+          done?.();
+        },
+        error: err => { this.loading = false; this.handleError(err); done?.(); }
+      });
+  }
+
+  // ================= Pattern section =================
+  onPatternDropdownChange(val: number | string) {
+    this.onPatternChanged(Number(val));
+  }
+  private onPatternChanged(id: number) {
+    this.selectedPatternId = id;
+    if (id === 0) {
+      this.patternForm.reset({ id: 0, name: '', green: 30, amber: 10, red: 30 });
+      return;
+    }
+    const p = this.patterns.find(x => x.id === id);
+    if (p) {
+      this.patternForm.patchValue({ id: p.id, name: p.name, green: p.green, amber: p.amber, red: p.red });
     }
   }
 
   savePattern() {
-    const p = this.patternForm.value;
-    this.patternService.savePattern(p).subscribe({
-      next: () => {
-        alert('Pattern saved successfully!');
+  if (this.patternForm.invalid) {
+    this.patternForm.markAllAsTouched();
+    return;
+  }
+  this.errorMsg = '';
+
+  const v = this.patternForm.value;
+  const id = Number(v.id ?? 0);
+
+  // السيرفر الحالي بـ GET لا يدعم الإنشاء (Id == 0) — بس Update/Delete
+  if (id === 0) {
+    alert('The current GET API supports update/delete only. Select an existing pattern (id > 0).');
+    return;
+  }
+
+  // ابعت المفاتيح بالحروف الكبيرة زي ما السيرفر بيعمل Parse عليها
+  const params = new HttpParams()
+    .set('ID', String(id))
+    .set('Name', String(v.name ?? ''))
+    .set('R', String(v.red ?? 0))
+    .set('A', String(v.amber ?? 0))
+    .set('G', String(v.green ?? 0));
+
+  this.loading = true;
+  this.http.get(`${this.baseUrl}/api/Pattern/Set`, { params, responseType: 'text' })
+    .subscribe({
+      next: (res) => {
+        this.loading = false;
         this.loadPatterns();
+        alert(res || 'Ok');
       },
       error: (err) => {
-        console.error(err);
-        alert('Failed to save pattern!');
-      },
+        this.loading = false;
+        this.handleError(err);
+      }
     });
-  }
+}
 
-  private loadPatterns(): void {
-    this.patternService.getPatterns().subscribe({
+deletePattern() {
+  const id = Number(this.patternForm.value.id ?? 0);
+  if (!id || id <= 0) {
+    alert('Select an existing pattern to delete.');
+    return;
+  }
+  const v = this.patternForm.value;
+
+  const params = new HttpParams()
+    .set('ID', String(-Math.abs(id)))        // حذف = ID سالب
+    .set('Name', String(v.name ?? ''))       // نفس المفاتيح المطلوبة
+    .set('R', String(v.red ?? 0))
+    .set('A', String(v.amber ?? 0))
+    .set('G', String(v.green ?? 0));
+
+  this.loading = true;
+  this.http.get(`${this.baseUrl}/api/Pattern/Set`, { params, responseType: 'text' })
+    .subscribe({
       next: (res) => {
-        this.patterns = [
-          {
-            ID: 0,
-            Name: '- New Pattern -',
-            RedDuration: 30,
-            AmberDuration: 10,
-            GreenDuration: 30,
-          },
-          ...res,
-        ];
-      },
-      error: (err) => console.error('Error loading patterns:', err),
-    });
-  }
-
-  private resetPatternForm(): void {
-    this.patternForm.reset({
-      patternList: 0,
-      name: '',
-      red: 30,
-      amber: 10,
-      green: 30,
-      blink: false,
-    });
-  }
-  deletePattern() {
-    const id = this.patternForm.value.patternList;
-    if (!id) return;
-
-    this.patternService.deletePattern(id).subscribe({
-      next: (res) => {
-        console.log('Pattern deleted', res);
+        this.loading = false;
         this.loadPatterns();
-        this.patternForm.reset();
+        alert(res || 'Delete successfully');
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        this.loading = false;
+        this.handleError(err);
+      }
+    });
+}
+
+  addPatternRow() {
+    if (this.selectedPatternId <= 0) { alert('Select a valid light pattern.'); return; }
+    if (this.templateRows.length >= this.MAX_ROWS) { alert(`MAX patterns [${this.MAX_ROWS}] per template`); return; }
+    if (this.templateRows.some(r => r.lightPatternID === this.selectedPatternId)) {
+      alert('Pattern already added.');
+      return;
+    }
+    this.templateRows = [
+      ...this.templateRows,
+      { lightPatternID: this.selectedPatternId, startFrom: '00:00', finishBy: '23:59', displayName: this.getPatternNameById(this.selectedPatternId) }
+    ];
+  }
+  removePatternRow(id: number) {
+    this.templateRows = this.templateRows.filter(r => r.lightPatternID !== id);
+  }
+
+  // ================= Template section =================
+  onTemplateDropdownChange(val: number | string) { this.onTemplateChanged(Number(val)); }
+
+  private onTemplateChanged(id: number) {
+    this.selectedTemplateId = id;
+
+    if (id === 0) {
+      // template جديد
+      this.templateNameCtrl.setValue('');
+      this.templateRows = [];
+      return;
+    }
+
+    // عبّي الاسم من القائمة
+    const t = this.templates.find(x => x.id === id);
+    if (t) this.templateNameCtrl.setValue(t.name);
+
+    // فلترة الـ rows لهذا الـ template من الـ cache
+    const rows = (this.allTemplatePatterns ?? []).filter(tp => Number(tp.TemplateID) === id && Number(tp.PetternID) > 0);
+
+    // حوّل DTO -> TemplateRow (مع أسماء الـ patterns)
+    this.templateRows = rows.map(tp => {
+      const pid = Number(tp.PetternID);
+      return {
+        lightPatternID: pid,
+        startFrom: this.fromTimeSpan(tp.StartFrom),
+        finishBy: this.fromTimeSpan(tp.FinishBy),
+        displayName: this.getPatternNameById(pid),
+      };
+    });
+
+    // (اختياري) لو عندك Patterns لسه متحمّلتش وقت أول فتح الصفحة، اتأكد
+    if (!this.patterns.length) this.loadPatterns(() => {
+      this.templateRows = this.templateRows.map(r => ({ ...r, displayName: this.getPatternNameById(r.lightPatternID) }));
     });
   }
+
+  saveTemplate() {
+    if (this.templateNameCtrl.invalid) { this.templateNameCtrl.markAsTouched(); return; }
+    this.errorMsg = '';
+    const patterns: UpdateTemplatePattern[] = this.templateRows.map(r => ({
+      lightPatternID: r.lightPatternID,
+      startFrom: this.toTimeSpan(r.startFrom),
+      finishBy: this.toTimeSpan(r.finishBy),
+    }));
+    const body: UpdateTemplateReq = {
+      id: Number(this.selectedTemplateId || 0),
+      name: this.templateNameCtrl.value ?? '',
+      patterns
+    };
+    this.loading = true;
+    this.http.post(`${this.baseUrl}/api/Template/Set`, body, { responseType: 'text' })
+      .subscribe({
+        next: _ => {
+          this.loading = false;
+          // بعد الحفظ.. حدّث القوائم و اقرأ template-patterns من جديد
+          this.loadTemplates(() => {
+            this.loadTemplatePatterns(() => this.onTemplateChanged(this.selectedTemplateId));
+          });
+          alert('Template saved.');
+        },
+        error: err => { this.loading = false; this.handleError(err); }
+      });
+  }
+
+  deleteTemplate() {
+    if (!this.selectedTemplateId || this.selectedTemplateId <= 0) { alert('Select existing template to delete.'); return; }
+    const body: UpdateTemplateReq = { id: -Math.abs(this.selectedTemplateId), name: this.templateNameCtrl.value ?? '', patterns: [] };
+    this.loading = true;
+    this.http.post(`${this.baseUrl}/api/Template/Set`, body, { responseType: 'text' })
+      .subscribe({
+        next: _ => {
+          this.loading = false;
+          this.loadTemplates(() => {
+            this.loadTemplatePatterns(() => this.onTemplateChanged(0));
+          });
+          alert('Template deleted.');
+        },
+        error: err => { this.loading = false; this.handleError(err); }
+      });
+  }
+
+  trackByPatternId = (_: number, item: TemplateRow) => item.lightPatternID;
 }
