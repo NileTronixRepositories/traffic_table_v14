@@ -45,7 +45,7 @@ interface TemplatePatternDto {
   styleUrls: ['./template.component.css'],
 })
 export class TemplateComponent implements OnInit {
-private baseUrl = '192.168.1.43/TLC';
+private baseUrl = 'http://192.168.1.43/TLC';
 
   // يسار: Light Pattern
   patterns: PatternVm[] = [];
