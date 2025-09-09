@@ -6,6 +6,7 @@ import {
   FormControl,
 } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 interface PatternVm {
   id: number;
@@ -50,7 +51,7 @@ interface TemplatePatternDto {
   styleUrls: ['./template.component.css'],
 })
 export class TemplateComponent implements OnInit {
-  private baseUrl = 'http://192.168.1.43/TLC';
+  private baseUrl = environment.baseUrl;
 
   // يسار: Light Pattern
   patterns: PatternVm[] = [];

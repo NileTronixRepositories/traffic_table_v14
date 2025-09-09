@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Template, TemplatePattern } from '../model/template';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TemplateService {
-  private baseUrl = 'http://192.168.1.43/TLC/api';
+  private baseUrl = `${environment.baseUrl}/api`;
 
   constructor(private http: HttpClient) {}
 

@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { Pattern } from '../model/pattern';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PatternService {
-  private baseUrl = 'http://192.168.1.43/TLC/api';
+  private baseUrl = `${environment.baseUrl}/api`;
   constructor(private http: HttpClient) {}
 
   getPatterns(): Observable<Pattern[]> {

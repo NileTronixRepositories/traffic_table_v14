@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subject, of } from 'rxjs';
 import { filter, map, take, timeout, catchError, takeUntil } from 'rxjs/operators';
 import { SignalRServiceService } from 'src/app/services/SignalR/signal-rservice.service';
+import { environment } from 'src/environments/environment';
 
 export interface Traffic {
   id: number;
@@ -123,7 +124,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
   applyCurrent(row: Traffic, event: MouseEvent) {
     this.showPopup(row, event);
     const id = row.id;
-    const url = 'http://192.168.1.43/TLC/signals/apply-current';
+    const url = `${environment.baseUrl}/signals/apply-current`;
     const body = { SignId: id };
 
     // (اختياري) انتظار أول رسالة لنفس الـ id

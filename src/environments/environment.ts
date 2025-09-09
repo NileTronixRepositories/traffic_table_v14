@@ -5,7 +5,8 @@
 export const environment = {
   production: false,
 
-  signalRUrl: 'http://localhost/TLC/signalr',
+  signalRUrl: 'http://192.168.1.43/TLC/signalr',
+  baseUrl:`http://192.168.1.43/TLC`
 };
 
 /*

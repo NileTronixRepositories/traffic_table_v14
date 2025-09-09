@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface SetLocationRequest {
   ID: number | null;
@@ -38,7 +39,7 @@ export interface SetLocationRequest {
 
 @Injectable({ providedIn: 'root' })
 export class TrafficPointConfigService {
-  private baseUrl = 'http://192.168.1.43/TLC';
+  private baseUrl = environment.baseUrl;
 
   constructor(private http: HttpClient) {}
 

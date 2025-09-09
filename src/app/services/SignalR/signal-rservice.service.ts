@@ -2,14 +2,15 @@ import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject, timer } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 @Injectable({ providedIn: 'root' })
 export class SignalRServiceService {
-  BaseBackUrl = 'http://192.168.1.43/TLC';
+  BaseBackUrl = environment.baseUrl;
 
   // --------- SignalR internals ---------
   private connection: any;
   private hub: any;
-  private readonly baseUrl = 'http://192.168.1.43/TLC';
+  private readonly baseUrl = environment.baseUrl;
   private readonly hubName = 'messageHub';
   private starting = false;
   private connected = false;
