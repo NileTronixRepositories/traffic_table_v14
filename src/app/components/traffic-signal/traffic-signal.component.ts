@@ -90,6 +90,7 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
     this.signalR.messages$
       .pipe(takeUntil(this.destroy$), map((m) => this.parseIncoming(m?.message)))
       .subscribe((action) => {
+       
         if (!action) return;
         console.log(action)
         // حدّث الصف
