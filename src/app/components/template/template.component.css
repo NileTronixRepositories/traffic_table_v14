@@ -1,26 +1,146 @@
-:host{
-  --brand: #9ed0a6;
-  --brand-dark: #2e7d32;
+.card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Top bar */
-.topbar{
-  background: linear-gradient(0deg, var(--brand-dark), #187746);
-  color: #fff;
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
 }
-.topbar a{ text-decoration: none; }
 
-/* Brand-colored header blocks */
-.bg-brand{ background-color: var(--brand) !important; }
-
-/* Stacked cards */
-.schedule-list{ display: grid; gap: .75rem; }
-.schedule-item{
-  border: 1px solid #e6edf5;
-  border-left: 6px solid var(--brand);
-  border-radius: .75rem;
-  padding: .5rem .75rem .75rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,.05);
-  background: #fff;
+/* Card header styling */
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px 20px;
+  font-size: 1.1rem;
 }
-.schedule-item .item-head{ padding-inline: .25rem; }
+
+.bg-brand {
+  background: linear-gradient(135deg, #9ed0a6 0%, #9ed0a6 100%);
+  color: #fff !important;
+}
+
+/* Form elements styling */
+.form-control,
+.form-select {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #64b5f6;
+  box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+}
+
+/* Button styling */
+.btn {
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-success {
+  background: linear-gradient(to right, #4caf50, #66bb6a);
+  border: none;
+}
+
+.btn-outline-success {
+  border: 1px solid #4caf50;
+  color: #4caf50;
+}
+
+.btn-outline-success:hover {
+  background: linear-gradient(to right, #4caf50, #66bb6a);
+  color: white;
+}
+
+.btn-outline-danger {
+  border: 1px solid #f44336;
+  color: #f44336;
+}
+
+.btn-outline-danger:hover {
+  background: linear-gradient(to right, #f44336, #ef5350);
+  color: white;
+}
+
+/* Light pattern inputs styling */
+.col-12.d-flex.align-items-center.gap-2 {
+  background: #f9f9f9;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* Schedule list styling */
+.schedule-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.schedule-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedule-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.schedule-item {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 4px solid #64b5f6;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.item-head {
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #ddd;
+  margin-bottom: 10px;
+}
+
+/* Alert styling */
+.alert-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #e1f5fe 100%);
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+  border-radius: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .card-body {
+    padding: 15px;
+  }
+
+  .card-header {
+    padding: 12px 15px;
+  }
+}
+
+/* Animation for new items */
+.schedule-item {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

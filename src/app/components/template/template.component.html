@@ -1,29 +1,13 @@
-<!-- Top bar -->
-<header class="topbar px-3 py-2 d-flex align-items-center justify-content-between">
-  <div class="brand d-flex align-items-center gap-2">
-    <img src="assets/img/traffic-light-30625.png" alt="logo" height="28" />
-    <span class="fw-bold text-white">Traffic Sign Control</span>
-  </div>
-
-  <nav class="nav-links d-none d-md-block">
-    <a class="text-white-50 me-3">Traffic Signals</a>
-    <a class="text-white-50 me-3">Map View</a>
-    <a class="text-white-50 me-3">Traffic Config</a>
-    <a class="text-white text-decoration-underline me-3">Template</a>
-    <a class="text-white-50">Green Way</a>
-  </nav>
-</header>
-
 <!-- Alerts -->
-<div *ngIf="errorMsg" class="alert alert-danger container-fluid mt-2">{{ errorMsg }}</div>
-<div *ngIf="loading" class="text-center mt-2">Loading…</div>
+<!-- <div *ngIf="errorMsg" class="alert alert-danger container-fluid mt-2">
+  {{ errorMsg }}
+</div>
+<div *ngIf="loading" class="text-center mt-2">Loading…</div> -->
 
-<!-- Main grid (Bootstrap 4/5) -->
-<div class="container-fluid my-3">
+<div class="container-fluid my-3 mt-5">
   <div class="row g-3">
-
     <!-- Left: col-lg-4 Light Pattern -->
-    <div class="col-12 col-lg-4">
+    <div class="col-12 col-lg-5">
       <section class="card shadow-sm h-100">
         <div class="card-header bg-brand text-dark text-center fw-semibold">
           Light Pattern
@@ -31,44 +15,96 @@
 
         <div class="card-body">
           <div class="row g-2 align-items-center mb-2">
-            <div class="col-auto"><label class="col-form-label">Select</label></div>
+            <div class="col-auto">
+              <label class="col-form-label">Select</label>
+            </div>
             <div class="col">
-              <select class="form-select"
-                      [ngModel]="selectedPatternId"
-                      (ngModelChange)="onPatternDropdownChange($event)">
-                <option *ngFor="let p of patterns" [value]="p.id">{{ p.name }}</option>
+              <select
+                class="form-select"
+                [ngModel]="selectedPatternId"
+                (ngModelChange)="onPatternDropdownChange($event)"
+              >
+                <option *ngFor="let p of patterns" [value]="p.id">
+                  {{ p.name }}
+                </option>
               </select>
             </div>
             <div class="col-auto">
-              <button class="btn btn-outline-success" type="button" (click)="addPatternRow()">Send ›</button>
+              <button
+                class="btn btn-outline-success"
+                type="button"
+                (click)="addPatternRow()"
+              >
+                Send ›
+              </button>
             </div>
           </div>
 
           <form [formGroup]="patternForm" class="mt-3">
-            <label class="form-label">Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" formControlName="name" placeholder="descriptive name" />
+            <label class="form-label"
+              >Name <span class="text-danger">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              formControlName="name"
+              placeholder="descriptive name"
+            />
 
             <div class="row g-3 align-items-center mt-2">
               <div class="col-12 d-flex align-items-center gap-2">
-                <img src="assets/img/g.png" alt="g" height="36">
-                <input type="number" class="form-control w-auto" formControlName="green" min="0" max="1000" step="1" />
+                <img src="assets/img/g.png" alt="g" height="36" />
+                <input
+                  type="number"
+                  class="form-control w-auto"
+                  formControlName="green"
+                  min="0"
+                  max="1000"
+                  step="1"
+                />
                 <span class="fw-semibold">sec.</span>
               </div>
               <div class="col-12 d-flex align-items-center gap-2">
-                <img src="assets/img/a.png" alt="a" height="36">
-                <input type="number" class="form-control w-auto" formControlName="amber" min="0" max="1000" step="1" />
+                <img src="assets/img/a.png" alt="a" height="36" />
+                <input
+                  type="number"
+                  class="form-control w-auto"
+                  formControlName="amber"
+                  min="0"
+                  max="1000"
+                  step="1"
+                />
                 <span class="fw-semibold">sec.</span>
               </div>
               <div class="col-12 d-flex align-items-center gap-2">
-                <img src="assets/img/r.png" alt="r" height="36">
-                <input type="number" class="form-control w-auto" formControlName="red" min="0" max="1000" step="1" />
+                <img src="assets/img/r.png" alt="r" height="36" />
+                <input
+                  type="number"
+                  class="form-control w-auto"
+                  formControlName="red"
+                  min="0"
+                  max="1000"
+                  step="1"
+                />
                 <span class="fw-semibold">sec.</span>
               </div>
             </div>
 
             <div class="d-flex justify-content-end gap-2 mt-3">
-              <button class="btn btn-outline-danger" type="button" (click)="deletePattern()">Delete</button>
-              <button class="btn btn-success" type="button" (click)="savePattern()">Save</button>
+              <button
+                class="btn btn-outline-danger"
+                type="button"
+                (click)="deletePattern()"
+              >
+                Delete
+              </button>
+              <button
+                class="btn btn-success"
+                type="button"
+                (click)="savePattern()"
+              >
+                Save
+              </button>
             </div>
           </form>
         </div>
@@ -76,16 +112,22 @@
     </div>
 
     <!-- Right: col-lg-6 Templates -->
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-7">
       <section class="card shadow-sm h-100">
-        <div class="card-header bg-brand d-flex flex-wrap align-items-center justify-content-between">
+        <div
+          class="card-header bg-brand d-flex flex-wrap align-items-center justify-content-between"
+        >
           <div class="fw-semibold">Templates</div>
           <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
-            <label class="col-form-label me-2">Select Template?</label>
-            <select class="form-select w-auto"
-                    [ngModel]="selectedTemplateId"
-                    (ngModelChange)="onTemplateDropdownChange($event)">
-              <option *ngFor="let t of templates" [value]="t.id">{{ t.name }}</option>
+            <label class="col-form-label me-2 w-50">Select Template</label>
+            <select
+              class="form-select w-75"
+              [ngModel]="selectedTemplateId"
+              (ngModelChange)="onTemplateDropdownChange($event)"
+            >
+              <option *ngFor="let t of templates" [value]="t.id">
+                {{ t.name }}
+              </option>
             </select>
           </div>
         </div>
@@ -93,50 +135,92 @@
         <div class="card-body">
           <div class="row g-2 align-items-center mb-2">
             <div class="col-auto">
-              <label class="col-form-label">Name <span class="text-danger">*</span></label>
+              <label class="col-form-label"
+                >Name <span class="text-danger">*</span></label
+              >
             </div>
             <div class="col">
-              <input type="text" class="form-control" [formControl]="templateNameCtrl" placeholder="descriptive name" />
+              <input
+                type="text"
+                class="form-control"
+                [formControl]="templateNameCtrl"
+                placeholder="descriptive name"
+              />
             </div>
           </div>
 
           <!-- Stacked cards list -->
           <div class="schedule-list">
-            <div class="schedule-item" *ngFor="let row of templateRows; trackBy: trackByPatternId">
-              <div class="item-head d-flex align-items-center justify-content-between">
+            <div
+              class="schedule-item"
+              *ngFor="let row of templateRows; trackBy: trackByPatternId"
+            >
+              <div
+                class="item-head d-flex align-items-center justify-content-between"
+              >
                 <div class="d-flex align-items-center gap-2">
-                  <img src="assets/img/traffic-light-30625.png" alt="tl" height="22">
+                  <img
+                    src="assets/img/traffic-light-30625.png"
+                    alt="tl"
+                    height="22"
+                  />
                   <span class="fw-semibold">{{ row.displayName }}</span>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" type="button" (click)="removePatternRow(row.lightPatternID)">✖</button>
+                <button
+                  class="btn btn-outline-danger btn-sm"
+                  type="button"
+                  (click)="removePatternRow(row.lightPatternID)"
+                >
+                  ✖
+                </button>
               </div>
 
               <div class="item-body row g-2 mt-1">
                 <div class="col-12 col-md-6">
                   <label class="form-label small text-muted">From</label>
-                  <input type="time" class="form-control" [(ngModel)]="row.startFrom" />
+                  <input
+                    type="time"
+                    class="form-control"
+                    [(ngModel)]="row.startFrom"
+                  />
                 </div>
                 <div class="col-12 col-md-6">
                   <label class="form-label small text-muted">To</label>
-                  <input type="time" class="form-control" [(ngModel)]="row.finishBy" />
+                  <input
+                    type="time"
+                    class="form-control"
+                    [(ngModel)]="row.finishBy"
+                  />
                 </div>
               </div>
             </div>
 
-            <div *ngIf="templateRows.length === 0" class="alert alert-info mb-0">
+            <div
+              *ngIf="templateRows.length === 0"
+              class="alert alert-info mb-0"
+            >
               No rows. Pick a pattern on the left then press “Send”.
             </div>
           </div>
         </div>
 
         <div class="card-footer d-flex justify-content-end gap-2 bg-light">
-          <button class="btn btn-outline-danger" type="button" (click)="deleteTemplate()">Delete ✖</button>
-          <button class="btn btn-success" type="button" (click)="saveTemplate()">Save Template ›</button>
+          <button
+            class="btn btn-outline-danger"
+            type="button"
+            (click)="deleteTemplate()"
+          >
+            Delete ✖
+          </button>
+          <button
+            class="btn btn-success"
+            type="button"
+            (click)="saveTemplate()"
+          >
+            Save Template ›
+          </button>
         </div>
       </section>
     </div>
-
-    <!-- Spacer: col-2 -->
-    <div class="col-12 col-lg-2"></div>
   </div>
 </div>
