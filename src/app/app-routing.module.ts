@@ -5,13 +5,16 @@ import { TrafficSignalComponent } from './components/traffic-signal/traffic-sign
 import { MapviewComponent } from './components/mapview/mapview.component';
 import { TrafficPointConfigComponent } from './components/traffic-point-config/traffic-point-config.component';
 import { TemplateComponent } from './components/template/template.component';
+import { TrafficControllerComponent } from './components/traffic-controller/traffic-controller.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'map', pathMatch: 'full' },
   { path: 'map', component: DirComponent },
-  { path: 'traffic-signal', component: TrafficSignalComponent },
+  { path: 'trafficSignal', component: TrafficSignalComponent },
+  { path: 'trafficController', component: TrafficControllerComponent },
+
   { path: 'mapview', component: MapviewComponent },
-  { path: 'traffic-point-config', component: TrafficPointConfigComponent },
+  { path: 'trafficPointConfig', component: TrafficPointConfigComponent },
   { path: 'template', component: TemplateComponent },
   { path: '**', redirectTo: 'map' },
 ];

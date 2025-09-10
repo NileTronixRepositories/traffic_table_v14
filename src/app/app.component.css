@@ -1,13 +1,127 @@
-html,
+/* ========== Global Typography Setup ========== */
+
+/* 0) Import Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap");
+
+/* 1) VARIABLES */
+:root {
+  /* Font families */
+  --font-sans: "Cairo", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Roboto Mono", "Courier New", Courier, monospace;
+
+  /* Font sizes (base + headings) */
+  --font-base-size: 16px;
+  --font-line-height: 1.5;
+
+  --h1-size: clamp(1.5rem, 2.2vw + 1.1rem, 2.25rem);
+  --h2-size: clamp(1.35rem, 1.9vw + 0.95rem, 1.75rem);
+  --h3-size: clamp(1.2rem, 1.6vw + 0.85rem, 1.4rem);
+  --h4-size: 1rem;
+  --h5-size: 0.9rem;
+  --h6-size: 0.85rem;
+}
+
+/* 2) Base HTML / Body */
+html {
+  font-size: var(--font-base-size);
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
 body {
-  height: 100%;
   margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--font-line-height);
+  color: #222;
+  background-color: #fff;
+  -webkit-text-size-adjust: 100%;
 }
 
-.navbar-brand {
-  font-weight: bold;
+/* 3) Headings */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.5em 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.2;
+  color: inherit;
+}
+h1 {
+  font-size: var(--h1-size);
+}
+h2 {
+  font-size: var(--h2-size);
+}
+h3 {
+  font-size: var(--h3-size);
+}
+h4 {
+  font-size: var(--h4-size);
+}
+h5 {
+  font-size: var(--h5-size);
+}
+h6 {
+  font-size: var(--h6-size);
 }
 
-.container-fluid {
-  padding: 0;
+/* 4) Text Elements */
+p {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+}
+label,
+.form-label {
+  font-size: 0.95rem;
+}
+small,
+.small {
+  font-size: 0.85rem;
+}
+
+/* 5) Form Controls & Buttons */
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: var(--font-line-height);
+}
+
+/* Bootstrap overrides */
+.btn,
+.form-control,
+.form-select {
+  font-family: var(--font-sans) !important;
+  font-size: 0.95rem;
+}
+
+/* 6) Monospace Elements */
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 0.12rem 0.25rem;
+  border-radius: 4px;
+}
+
+/* 7) Responsive Adjustments */
+@media (max-width: 360px) {
+  :root {
+    --font-base-size: 15px;
+  }
 }

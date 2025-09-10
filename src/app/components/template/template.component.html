@@ -6,15 +6,113 @@
 
 <div class="container-fluid my-3 mt-5">
   <div class="row g-3">
-    <!-- Left: col-lg-4 Light Pattern -->
-    <div class="col-12 col-lg-5">
+    <!-- Left: col-lg-6 Templates -->
+    <div class="col-12 col-lg-7">
       <section class="card shadow-sm h-100">
-        <div class="card-header bg-brand text-dark text-center fw-semibold">
-          Light Pattern
+        <!-- Header -->
+        <div class="card-header bg-brand">
+          <div class="row align-items-center g-2">
+            <!-- Title -->
+            <div class="col-12 col-sm-3">
+              <span class="fw-semibold">Templates</span>
+            </div>
+
+            <!-- Label + Dropdown aligned right -->
+            <div class="col-12 col-sm-6 ms-auto">
+              <div class="d-flex align-items-center justify-content-end gap-2">
+                <label class="col-form-label mb-0">Select Template</label>
+                <select
+                  class="form-select form-select-sm shadow-sm w-auto pe-4"
+                  [ngModel]="selectedTemplateId"
+                  (ngModelChange)="onTemplateDropdownChange($event)"
+                >
+                  <option *ngFor="let t of templates" [value]="t.id">
+                    {{ t.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
 
+        <!-- Body -->
         <div class="card-body">
-          <div class="row g-2 align-items-center mb-2">
+          <!-- Template Name -->
+          <div class="row g-2 align-items-center mb-3">
+            <div class="col-auto">
+              <label class="col-form-label">
+                Name <span class="text-danger">*</span>
+              </label>
+            </div>
+            <div class="col">
+              <input
+                type="text"
+                class="form-control"
+                [formControl]="templateNameCtrl"
+                placeholder="Descriptive name"
+              />
+            </div>
+          </div>
+
+          <!-- Rows list -->
+          <div class="schedule-list mb-3">
+            <div
+              class="schedule-item border rounded p-2 mb-2"
+              *ngFor="let row of templateRows; trackBy: trackByPatternId"
+            >
+              <!-- Row header -->
+              <div
+                class="item-head d-flex align-items-center justify-content-between"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <img
+                    src="assets/img/traffic-light-30625.png"
+                    alt="tl"
+                    height="22"
+                  />
+                  <span class="fw-semibold">{{ row.displayName }}</span>
+                </div>
+                <button
+                  class="btn btn-outline-danger btn-sm"
+                  type="button"
+                  (click)="removePatternRow(row.lightPatternID)"
+                >
+                  ✖
+                </button>
+              </div>
+
+              <!-- Row body -->
+              <div class="item-body row g-2 mt-2">
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-muted">From</label>
+                  <input
+                    type="time"
+                    class="form-control"
+                    [(ngModel)]="row.startFrom"
+                  />
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label small text-muted">To</label>
+                  <input
+                    type="time"
+                    class="form-control"
+                    [(ngModel)]="row.finishBy"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              *ngIf="templateRows.length === 0"
+              class="alert alert-info mb-0"
+            >
+              No rows. Pick a pattern on the left then press “Send”.
+            </div>
+          </div>
+
+          <!-- Add Pattern Row -->
+          <div class="row g-2 align-items-center mb-3">
             <div class="col-auto">
               <label class="col-form-label">Select</label>
             </div>
@@ -35,11 +133,22 @@
                 type="button"
                 (click)="addPatternRow()"
               >
-                Send ›
+                Add To Template
               </button>
             </div>
           </div>
+        </div>
+      </section>
+    </div>
 
+    <!-- right: col-lg-4 Light Pattern -->
+    <div class="col-12 col-lg-5">
+      <section class="card shadow-sm h-100">
+        <div class="card-header bg-brand text-dark text-center fw-semibold">
+          Light Pattern
+        </div>
+
+        <div class="card-body">
           <form [formGroup]="patternForm" class="mt-3">
             <label class="form-label"
               >Name <span class="text-danger">*</span></label
@@ -103,124 +212,26 @@
                 type="button"
                 (click)="savePattern()"
               >
-                Save
+                Create Pattern
               </button>
             </div>
           </form>
         </div>
       </section>
     </div>
-
-    <!-- Right: col-lg-6 Templates -->
-    <div class="col-12 col-lg-7">
-      <section class="card shadow-sm h-100">
-        <div
-          class="card-header bg-brand d-flex flex-wrap align-items-center justify-content-between"
-        >
-          <div class="fw-semibold">Templates</div>
-          <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
-            <label class="col-form-label me-2 w-50">Select Template</label>
-            <select
-              class="form-select w-75"
-              [ngModel]="selectedTemplateId"
-              (ngModelChange)="onTemplateDropdownChange($event)"
-            >
-              <option *ngFor="let t of templates" [value]="t.id">
-                {{ t.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="card-body">
-          <div class="row g-2 align-items-center mb-2">
-            <div class="col-auto">
-              <label class="col-form-label"
-                >Name <span class="text-danger">*</span></label
-              >
-            </div>
-            <div class="col">
-              <input
-                type="text"
-                class="form-control"
-                [formControl]="templateNameCtrl"
-                placeholder="descriptive name"
-              />
-            </div>
-          </div>
-
-          <!-- Stacked cards list -->
-          <div class="schedule-list">
-            <div
-              class="schedule-item"
-              *ngFor="let row of templateRows; trackBy: trackByPatternId"
-            >
-              <div
-                class="item-head d-flex align-items-center justify-content-between"
-              >
-                <div class="d-flex align-items-center gap-2">
-                  <img
-                    src="assets/img/traffic-light-30625.png"
-                    alt="tl"
-                    height="22"
-                  />
-                  <span class="fw-semibold">{{ row.displayName }}</span>
-                </div>
-                <button
-                  class="btn btn-outline-danger btn-sm"
-                  type="button"
-                  (click)="removePatternRow(row.lightPatternID)"
-                >
-                  ✖
-                </button>
-              </div>
-
-              <div class="item-body row g-2 mt-1">
-                <div class="col-12 col-md-6">
-                  <label class="form-label small text-muted">From</label>
-                  <input
-                    type="time"
-                    class="form-control"
-                    [(ngModel)]="row.startFrom"
-                  />
-                </div>
-                <div class="col-12 col-md-6">
-                  <label class="form-label small text-muted">To</label>
-                  <input
-                    type="time"
-                    class="form-control"
-                    [(ngModel)]="row.finishBy"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div
-              *ngIf="templateRows.length === 0"
-              class="alert alert-info mb-0"
-            >
-              No rows. Pick a pattern on the left then press “Send”.
-            </div>
-          </div>
-        </div>
-
-        <div class="card-footer d-flex justify-content-end gap-2 bg-light">
-          <button
-            class="btn btn-outline-danger"
-            type="button"
-            (click)="deleteTemplate()"
-          >
-            Delete ✖
-          </button>
-          <button
-            class="btn btn-success"
-            type="button"
-            (click)="saveTemplate()"
-          >
-            Save Template ›
-          </button>
-        </div>
-      </section>
-    </div>
   </div>
+</div>
+
+<!-- Footer -->
+<div class="card-footer d-flex justify-content-center gap-2">
+  <button
+    class="btn btn-outline-danger"
+    type="button"
+    (click)="deleteTemplate()"
+  >
+    Delete ✖
+  </button>
+  <button class="btn btn-success" type="button" (click)="saveTemplate()">
+    Save Template ›
+  </button>
 </div>

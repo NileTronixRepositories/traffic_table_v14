@@ -1,4 +1,4 @@
-<div class="traffic-control-container">
+<div class="traffic-control-container mt-5">
   <h2 class="main-header">Traffic Point Configuration</h2>
 
   <form [formGroup]="form" class="traffic-form">
@@ -135,7 +135,7 @@
       </div>
 
       <!-- Current Status -->
-      <div class="current-status">
+      <!-- <div class="current-status">
         <h4>Current Status</h4>
         <div class="status-display">
           <div class="status-values">
@@ -155,23 +155,29 @@
             </span>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Blink Options -->
       <div class="blink-options">
         <div class="blink-title">Blink Options</div>
         <div class="blink-controls">
           <label class="blink-checkbox">
-            <input type="checkbox" formControlName="blinkGreen" />
-            <span class="checkmark"></span> Blink Green
+            <input
+              class="checkbox-blink"
+              type="checkbox"
+              formControlName="blinkGreen"
+            />
+            Blink Green
           </label>
+
           <label class="blink-checkbox">
             <input type="checkbox" formControlName="blinkYellow" />
-            <span class="checkmark"></span> Blink Yellow
+            Blink Yellow
           </label>
+
           <label class="blink-checkbox">
             <input type="checkbox" formControlName="blinkRed" />
-            <span class="checkmark"></span> Blink Red
+            Blink Red
           </label>
         </div>
 
@@ -186,22 +192,34 @@
             />
           </div>
         </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Pedestrian Timer:</label>
+            <input
+              type="number"
+              formControlName="blinkMs"
+              class="form-control"
+              placeholder="500"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Toggle Main Set -->
-      <div class="toggle-main">
+      <!-- <div class="toggle-main">
         <label class="toggle-switch">
           <input type="checkbox" formControlName="toggleMain" />
-          <span class="slider"></span> Toggle main-set
+          <span class="slider"></span>
+          <span class="toggle-label">Toggle main-set</span>
         </label>
-      </div>
+      </div> -->
     </div>
 
     <!-- Actions -->
     <div class="action-buttons">
-      <button type="button" class="btn btn-run" (click)="runCommand()">
+      <!-- <button type="button" class="btn btn-run" (click)="runCommand()">
         <span class="btn-icon">▶</span> Run
-      </button>
+      </button> -->
       <button type="button" class="btn btn-apply" (click)="applyChanges()">
         <span class="btn-icon">✔</span> Apply
       </button>

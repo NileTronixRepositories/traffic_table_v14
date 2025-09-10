@@ -110,9 +110,9 @@ export class TrafficPointConfigComponent implements OnInit {
       yellow: [10],
       green: [30],
 
-      blinkRed: [false],
-      blinkYellow: [false],
-      blinkGreen: [false],
+      blinkRed: [{ value: false, disabled: true }],
+      blinkYellow: [{ value: false, disabled: true }],
+      blinkGreen: [{ value: false, disabled: true }],
       blinkMs: [500],
 
       toggleMain: [false],

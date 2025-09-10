@@ -88,17 +88,44 @@ export class TemplateComponent implements OnInit {
       ],
       red: [30, [Validators.required, Validators.min(0), Validators.max(1000)]],
     });
+    this.patternForm = this.fb.group({
+      id: [0, [Validators.required]],
+      name: ['', [Validators.required, Validators.maxLength(200)]],
+      green: [
+        30,
+        [Validators.required, Validators.min(0), Validators.max(1000)],
+      ],
+      amber: [
+        10,
+        [Validators.required, Validators.min(0), Validators.max(1000)],
+      ],
+      red: [{ value: 30, disabled: true }, [Validators.required]],
+    });
   }
 
   ngOnInit(): void {
+    // روابط التحميل زي ما هي
     this.loadPatterns(() => {
       this.loadTemplates(() => {
         this.loadTemplatePatterns(() => {
-          // start with "new template"
           this.onTemplateChanged(0);
         });
       });
     });
+
+    this.patternForm
+      .get('green')
+      ?.valueChanges.subscribe(() => this.updateRed());
+    this.patternForm
+      .get('amber')
+      ?.valueChanges.subscribe(() => this.updateRed());
+
+    this.updateRed();
+  }
+  private updateRed() {
+    const g = Number(this.patternForm.get('green')?.value ?? 0);
+    const a = Number(this.patternForm.get('amber')?.value ?? 0);
+    this.patternForm.get('red')?.setValue(g + a, { emitEvent: false });
   }
 
   // ================= Utils =================
@@ -215,7 +242,7 @@ export class TemplateComponent implements OnInit {
         name: '',
         green: 30,
         amber: 10,
-        red: 30,
+        red: 0,
       });
       return;
     }
@@ -241,15 +268,37 @@ export class TemplateComponent implements OnInit {
     const v = this.patternForm.value;
     const id = Number(v.id ?? 0);
 
-    // السيرفر الحالي بـ GET لا يدعم الإنشاء (Id == 0) — بس Update/Delete
     if (id === 0) {
-      alert(
-        'The current GET API supports update/delete only. Select an existing pattern (id > 0).'
-      );
+      const params = new HttpParams()
+        .set('name', String(v.name ?? ''))
+        .set('red', String(v.red ?? 0))
+        .set('amber', String(v.amber ?? 0))
+        .set('green', String(v.green ?? 0));
+
+      this.loading = true;
+      this.http
+        .get(`${this.baseUrl}/api/add/pattern`, {
+          params,
+          responseType: 'text',
+        })
+        .subscribe({
+          next: (_) => {
+            this.loading = false;
+            this.loadPatterns(() => {
+              const newPat = this.patterns.find((p) => p.name === v.name);
+              // if (newPat) this.onPatternChanged(newPat.id);
+            });
+            alert('Pattern added successfully.');
+          },
+          error: (err) => {
+            this.loading = false;
+            this.handleError(err);
+          },
+        });
+
       return;
     }
 
-    // ابعت المفاتيح بالحروف الكبيرة زي ما السيرفر بيعمل Parse عليها
     const params = new HttpParams()
       .set('ID', String(id))
       .set('Name', String(v.name ?? ''))
@@ -261,10 +310,10 @@ export class TemplateComponent implements OnInit {
     this.http
       .get(`${this.baseUrl}/api/Pattern/Set`, { params, responseType: 'text' })
       .subscribe({
-        next: (res) => {
+        next: (_) => {
           this.loading = false;
-          this.loadPatterns();
-          // alert(res || 'Ok');
+          this.loadPatterns(() => this.onPatternChanged(id));
+          alert('Pattern updated successfully.');
         },
         error: (err) => {
           this.loading = false;
@@ -282,8 +331,8 @@ export class TemplateComponent implements OnInit {
     const v = this.patternForm.value;
 
     const params = new HttpParams()
-      .set('ID', String(-Math.abs(id))) // حذف = ID سالب
-      .set('Name', String(v.name ?? '')) // نفس المفاتيح المطلوبة
+      .set('ID', String(-Math.abs(id)))
+      .set('Name', String(v.name ?? ''))
       .set('R', String(v.red ?? 0))
       .set('A', String(v.amber ?? 0))
       .set('G', String(v.green ?? 0));

@@ -12,6 +12,7 @@ import { PointconfigComponent } from './components/pointconfig/pointconfig.compo
 import { TemplateComponent } from './components/template/template.component';
 import { HeaderComponent } from './components/header/header.component';
 import { TrafficPointConfigComponent } from './components/traffic-point-config/traffic-point-config.component';
+import { TrafficControllerComponent } from './components/traffic-controller/traffic-controller.component';
 
 @NgModule({
   declarations: [
@@ -23,6 +24,7 @@ import { TrafficPointConfigComponent } from './components/traffic-point-config/t
     TemplateComponent,
     HeaderComponent,
     TrafficPointConfigComponent,
+    TrafficControllerComponent,
   ],
   imports: [
     BrowserModule,

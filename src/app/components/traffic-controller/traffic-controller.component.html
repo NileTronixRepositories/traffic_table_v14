@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="header">
-    <h1 class="title">Traffic Signal Management</h1>
+    <h1 class="title">Traffic Controller</h1>
 
     <div class="search-container">
       <div class="search-box">
@@ -81,33 +81,33 @@
         <th>ID</th>
         <th>IpAddress</th>
         <th>Name</th>
-        <th>Active</th>
-        <!-- <th>Current</th> -->
+        <th>Pattern</th>
       </tr>
     </thead>
     <tbody>
-      <tr
-        *ngFor="let traffic of paginatedTraffics"
-        (mouseenter)="showPopup(traffic, $event)"
-        (mousemove)="movePopup($event)"
-        (mouseleave)="hidePopup()"
-      >
+      <tr *ngFor="let traffic of paginatedTraffics">
         <td>{{ traffic.id }}</td>
         <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
         <td>
-          <span [ngClass]="traffic.active ? 'active' : 'inactive'">
-            {{ traffic.active ? activeLabel : inactiveLabel }}
-          </span>
+          <div class="d-flex align-items-center gap-2">
+            <select
+              [(ngModel)]="traffic.selectedPatternId"
+              class="form-select form-select-sm"
+            >
+              <option *ngFor="let pat of patterns" [ngValue]="pat.ID">
+                {{ pat.Name }}
+              </option>
+            </select>
+
+            <button
+              class="btn btn-sm btn-primary"
+              (click)="applyPattern(traffic)"
+            >
+              Apply
+            </button>
+          </div>
         </td>
-        <!-- <td>
-          <button
-            class="btn btn-success"
-            (click)="applyCurrent(traffic, $event)"
-          >
-            Apply
-          </button>
-        </td> -->
       </tr>
       <tr *ngIf="paginatedTraffics.length === 0">
         <td colspan="4" class="no-results">

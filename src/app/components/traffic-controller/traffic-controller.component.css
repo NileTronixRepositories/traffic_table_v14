@@ -169,8 +169,8 @@
 }
 
 .traffic-table th {
-  background: #9ed0a6;
-  color: #2c3e50;
+  background: gray;
+  color: #fff;
   padding: 16px;
   text-align: center;
   font-weight: 600;
