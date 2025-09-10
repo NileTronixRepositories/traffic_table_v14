@@ -526,3 +526,31 @@
     left: 0;
   }
 }
+.custom-select {
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.95rem;
+  background-color: #fff;
+  color: #333;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* عند الفوكس */
+.custom-select:focus {
+  border-color: #4cafef;
+  box-shadow: 0 0 0 0.2rem rgba(76, 175, 239, 0.25);
+  outline: none;
+}
+
+/* عند الـ disabled */
+.custom-select:disabled {
+  background-color: #f8f9fa;
+  color: #888;
+  cursor: not-allowed;
+}
+
+/* الخيارات داخل القائمة */
+.custom-select option {
+  padding: 0.4rem;
+}

@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="header">
-    <h1 class="title">Traffic Signal Management</h1>
+    <h1 class="title">Traffic Controller</h1>
 
     <div class="search-container">
       <div class="search-box">
@@ -81,15 +81,13 @@
         <th>ID</th>
         <th>IpAddress</th>
         <th>Name</th>
-        <th>Active</th>
         <th>Pattern</th>
-        <th>Apply</th>
-        <!-- <th>Current</th> -->
+        <th>Current</th>
       </tr>
     </thead>
     <tbody>
       <tr
-        *ngFor="let traffic of paginatedTraffics; "
+        *ngFor="let traffic of paginatedTraffics"
         (mouseenter)="showPopup(traffic, $event)"
         (mousemove)="movePopup($event)"
         (mouseleave)="hidePopup()"
@@ -97,15 +95,15 @@
         <td>{{ traffic.id }}</td>
         <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
-        <td>
+        <!-- <td>
           <span [ngClass]="traffic.active ? 'active' : 'inactive'">
             {{ traffic.active ? activeLabel : inactiveLabel }}
           </span>
-        </td>
-
+        </td> -->
         <!-- Pattern column (الاسم فقط) -->
         <td class="pattern-cell">
           <select
+            class="form-select custom-select"
             [(ngModel)]="selectedPatternId[traffic.id]"
             (ngModelChange)="onPatternSelected(traffic, $event)"
             [disabled]="isLoadingPatterns || !patterns.length"
@@ -124,7 +122,6 @@
             </option>
           </select>
         </td>
-
         <!-- Apply column -->
         <td class="apply-cell">
           <button
@@ -136,14 +133,8 @@
             Apply
           </button>
         </td>
-
-        <!-- <td>
-          <button class="btn btn-success" (click)="applyCurrent(traffic, $event)">
-            Apply (old)
-          </button>
-        </td> -->
+        <!-- <td> <button class="btn btn-success" (click)="applyCurrent(traffic, $event)"> Apply (old) </button> </td> -->
       </tr>
-
       <tr *ngIf="paginatedTraffics.length === 0">
         <td colspan="6" class="no-results">
           No traffic signals found matching your criteria
@@ -158,6 +149,7 @@
     *ngIf="popupVisible"
     [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
   >
+    <!-- Header -->
     <div class="tp-header">
       <div class="tp-title">
         <span
@@ -172,6 +164,7 @@
       </span>
     </div>
 
+    <!-- Coordinates -->
     <div class="tp-meta">
       <div class="tp-meta__item">
         <i class="tp-ico">📍</i>
@@ -184,7 +177,9 @@
       </div>
     </div>
 
+    <!-- Grid -->
     <div class="tp-grid">
+      <!-- L1 -->
       <div class="tp-col">
         <div class="tp-col__head">
           <span class="tp-col__label">L1</span>
@@ -221,6 +216,7 @@
         </div>
       </div>
 
+      <!-- L2 -->
       <div class="tp-col">
         <div class="tp-col__head">
           <span class="tp-col__label">L2</span>
