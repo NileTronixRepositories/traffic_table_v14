@@ -11,14 +11,7 @@ import {
 } from 'rxjs/operators';
 import { SignalRServiceService } from 'src/app/services/SignalR/signal-rservice.service';
 import { environment } from 'src/environments/environment';
-import { Pattern } from 'src/app/model/pattern';
-interface PatternVm {
-  id: number;
-  name: string;
-  green: number;
-  amber: number;
-  red: number;
-}
+
 export interface Traffic {
   id: number;
   ipAddress?: string;
@@ -32,21 +25,47 @@ export interface Traffic {
   T?: number;
   Latitude?: string | null;
   Longitude?: string | null;
-  selectedPatternId?: number;
+}
+
+export interface PatternDto {
+  ID: number;
+  Name: string;
+  Red: number;
+  Green: number;
+  Amber: number;
+  GreenAmberOverlab?: boolean;
+  Pedstrain?: boolean;
+  ShowPedstrainCounter?: boolean;
+  SignTemplates?: any;
+}
+export interface Pattern {
+  id: number;
+  name: string;
+  red: number;
+  green: number;
+  amber: number;
+  overlap?: boolean;
+  pedstrain?: boolean;
+  showPedstrainCounter?: boolean;
+  signTemplates?: any;
 }
 @Component({
   selector: 'app-traffic-controller',
   templateUrl: './traffic-controller.component.html',
   styleUrls: ['./traffic-controller.component.css'],
 })
-export class TrafficControllerComponent implements OnInit {
-  // Data
-  traffics: Traffic[] = [];
-  patterns: Pattern[] = [];
-
+export class TrafficControllerComponent implements OnInit { 
+traffics: Traffic[] = [];
   searchTerm = '';
   pageSize = 10;
   currentPage = 1;
+
+  // Patterns
+  patterns: Pattern[] = [];
+  /** يحتفظ بـ id لكل صف */
+  selectedPatternId: Record<number, number | null> = {};
+  isLoadingPatterns = false;
+  patternLoadError = '';
 
   // Popup
   popupVisible = false;
@@ -85,34 +104,23 @@ export class TrafficControllerComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    // 1) Load Patterns
+    this.loadPatterns();
+
+    // 2) Load table
     this.signalR
       .getControlBoxes()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
-        this.traffics = data.map((t) => ({ ...t, selectedPatternId: 0 }));
+        this.traffics = data;
+        for (const t of data) {
+          if (this.selectedPatternId[t.id] === undefined) {
+            this.selectedPatternId[t.id] = null;
+          }
+        }
       });
 
-    this.http
-      .get<Pattern[]>(`${environment.baseUrl}/api/Pattern/list`)
-      .subscribe({
-        next: (res) => {
-          this.patterns = (res ?? []).map((p) => ({
-            ...p,
-            ID: Number(p.ID ?? 0),
-            Name: String(p.Name ?? ''),
-            RedDuration: Number(p.RedDuration ?? p.RedDuration ?? 0),
-            AmberDuration: Number(p.AmberDuration ?? p.AmberDuration ?? 0),
-            GreenDuration: Number(p.GreenDuration ?? p.GreenDuration ?? 0),
-          }));
-        },
-        error: (err) => console.error(' Error loading patterns', err),
-      });
-
-    this.signalR
-      .getControlBoxes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((data) => (this.traffics = data));
-
+    // Connection state
     this.signalR.connectionState$
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
@@ -124,7 +132,7 @@ export class TrafficControllerComponent implements OnInit {
         }
       });
 
-    // استقبال الرسائل العامة
+    // Incoming messages
     this.signalR.messages$
       .pipe(
         takeUntil(this.destroy$),
@@ -132,8 +140,6 @@ export class TrafficControllerComponent implements OnInit {
       )
       .subscribe((action) => {
         if (!action) return;
-        console.log(action);
-        // حدّث الصف
         const t = this.traffics.find((x) => x.id === action.id);
         if (t) {
           t.L1 = action.L1;
@@ -143,13 +149,11 @@ export class TrafficControllerComponent implements OnInit {
           t.T = this.deriveT(action.T1, action.T2, t.T);
           t.status = action.L1;
         }
-        // لو الـ Popup مفتوح لنفس الـ id → حدّثه وابدأ العدّادين
         if (this.popupData?.id === action.id) {
           this.popupData = { ...(t ?? this.popupData) };
           this.countingForId = action.id;
           if (!this.popupDisconnected) this.startDualCounters();
         } else {
-          // رسالة لغير نفس الـ id → أوقف العدّادين
           this.stopCounters();
         }
       });
@@ -161,14 +165,90 @@ export class TrafficControllerComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  // Click row → POST + فتح Popup (بدون عدّاد)
+  // ---------- Patterns ----------
+  private loadPatterns() {
+    this.isLoadingPatterns = true;
+    this.patternLoadError = '';
+    this.http
+      .get<PatternDto[]>(`${environment.baseUrl}/api/Pattern/list`)
+      .pipe(
+        map((rows) =>
+          rows.map((r) => ({
+            id: r.ID,
+            name: r.Name,
+            red: Number(r.Red) || 0,
+            green: Number(r.Green) || 0,
+            amber: Number(r.Amber) || 0,
+            overlap: !!r.GreenAmberOverlab,
+            pedstrain: !!r.Pedstrain,
+            showPedstrainCounter: !!r.ShowPedstrainCounter,
+            signTemplates: r.SignTemplates,
+          }))
+        ),
+        catchError((err) => {
+          console.error('Failed to load patterns', err);
+          this.patternLoadError = 'Failed to load patterns';
+          return of<Pattern[]>([]);
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((list) => {
+        this.patterns = list;
+        this.isLoadingPatterns = false;
+      });
+  }
+
+  onPatternSelected(row: Traffic, patternId: number | null) {
+    // مجرد حفظ الـ id؛ العرض في الـ select هو الاسم فقط
+    this.selectedPatternId[row.id] = patternId ?? null;
+  }
+
+  // ---------- Apply (POST /signals/apply-current) ----------
+  /** يرسل فقط الحقول غير الـ null/undefined */
+private compact<T extends object>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k of Object.keys(obj) as (keyof T)[]) {
+    const v = obj[k];
+    if (v !== null && v !== undefined) {
+      out[k] = v; // متوافق نوعيًا مع Partial<T>
+    }
+  }
+  return out;
+}
+
+  applySelected(row: Traffic) {
+    const url = `${environment.baseUrl}/signals/apply-current`;
+    const lightPatternId = this.selectedPatternId[row.id] ?? undefined;
+
+    const req = this.compact({
+      // سيأخذ أيًا مما هو متاح
+      SignId: row.id ?? undefined,
+      Ip: row.ipAddress ?? undefined,
+      LightPatternId: lightPatternId,
+      // باقي الفيلدز تترك فارغة (لن تُرسل)
+      // UseTcp: undefined,
+      // TcpPort: undefined,
+      // BlinkMs: undefined,
+      // BlinkRed: undefined,
+      // BlinkAmber: undefined,
+      // BlinkGreen: undefined,
+      // ChangeMain: undefined,
+      // DeviceId: undefined,
+    });
+
+    this.http.post(url, req).subscribe({
+      next: (res) => console.log('ApplyCurrent success', res),
+      error: (err) => console.error('ApplyCurrent error', err),
+    });
+  }
+
+  // ---------- Popup / timers ----------
   applyCurrent(row: Traffic, event: MouseEvent) {
     this.showPopup(row, event);
     const id = row.id;
     const url = `${environment.baseUrl}/signals/apply-current`;
     const body = { SignId: id };
 
-    // (اختياري) انتظار أول رسالة لنفس الـ id
     this.signalR.messages$
       .pipe(
         takeUntil(this.destroy$),
@@ -188,9 +268,7 @@ export class TrafficControllerComponent implements OnInit {
         timeout({ first: 8000 }),
         catchError(() => of(null))
       )
-      .subscribe(() => {
-        // التحديث بيتم في الاشتراك العام
-      });
+      .subscribe(() => {});
 
     this.http.post<any>(url, body).subscribe({
       next: (res) => console.log(':white_tick: POST Success', res),
@@ -198,14 +276,17 @@ export class TrafficControllerComponent implements OnInit {
     });
   }
 
-  // Parse رسالة SignalR
-  private parseIncoming(raw?: string): {
-    id: number;
-    L1: 'R' | 'G' | 'Y';
-    L2: 'R' | 'G' | 'Y';
-    T1?: number;
-    T2?: number;
-  } | null {
+  private parseIncoming(
+    raw?: string
+  ):
+    | {
+        id: number;
+        L1: 'R' | 'G' | 'Y';
+        L2: 'R' | 'G' | 'Y';
+        T1?: number;
+        T2?: number;
+      }
+    | null {
     if (!raw) return null;
     try {
       const obj = JSON.parse(raw);
@@ -237,7 +318,6 @@ export class TrafficControllerComponent implements OnInit {
     }
   }
 
-  /** اشتقاق T اختياري للجدول فقط */
   private deriveT(T1?: number, T2?: number, fallback?: number) {
     if (typeof T1 === 'number' || typeof T2 === 'number') {
       return Math.max(T1 ?? 0, T2 ?? 0);
@@ -245,7 +325,6 @@ export class TrafficControllerComponent implements OnInit {
     return fallback;
   }
 
-  // Popup & dual timers
   showPopup(traffic: Traffic, event: MouseEvent) {
     this.popupData = traffic;
     this.popupVisible = true;
@@ -275,7 +354,6 @@ export class TrafficControllerComponent implements OnInit {
     this.popupY = y + window.scrollY;
   }
 
-  /** المؤقّت الآن يحدّث T1 و T2 معًا */
   private startDualCounters() {
     this.stopCounters();
     if (this.popupDisconnected) return;
@@ -286,7 +364,6 @@ export class TrafficControllerComponent implements OnInit {
     let t2 =
       typeof this.popupData.T2 === 'number' ? this.popupData.T2! : undefined;
 
-    // لو مفيش أي مؤقّت، مفيش داعي للتشغيل
     if ((t1 ?? 0) <= 0 && (t2 ?? 0) <= 0) return;
 
     this.interval = setInterval(() => {
@@ -294,17 +371,14 @@ export class TrafficControllerComponent implements OnInit {
         this.stopCounters();
         return;
       }
-      // قلّل T1
       if (typeof t1 === 'number' && t1 > 0) {
         t1--;
         this.popupData!.T1 = t1;
       }
-      // قلّل T2
       if (typeof t2 === 'number' && t2 > 0) {
         t2--;
         this.popupData!.T2 = t2;
       }
-      // لو الاتنين خلّصوا → أوقف
       if ((t1 ?? 0) <= 0 && (t2 ?? 0) <= 0) {
         this.stopCounters();
       }
@@ -316,7 +390,6 @@ export class TrafficControllerComponent implements OnInit {
     this.countingForId = null;
   }
 
-  // Helpers
   mapSignalColor(
     color: 'R' | 'G' | 'Y' | undefined
   ): 'RED' | 'GREEN' | 'YELLOW' {
@@ -324,14 +397,14 @@ export class TrafficControllerComponent implements OnInit {
   }
 
   getEmoji(c: 'RED' | 'GREEN' | 'YELLOW') {
-    // 🔴 U+1F534, 🟢 U+1F7E2, 🟡 U+1F7E1
     const map: Record<'RED' | 'GREEN' | 'YELLOW', string> = {
-      RED: '\u{1F534}', // 🔴
-      GREEN: '\u{1F7E2}', // 🟢
-      YELLOW: '\u{1F7E1}', // 🟡
+      RED: '\u{1F534}',
+      GREEN: '\u{1F7E2}',
+      YELLOW: '\u{1F7E1}',
     };
     return map[c];
   }
+
   get filteredTraffics(): Traffic[] {
     return this.traffics.filter((t) => {
       const matchesSearch =
@@ -402,45 +475,5 @@ export class TrafficControllerComponent implements OnInit {
       this.showStatusFilter = false;
     if (!target.closest('.active-filter-dropdown'))
       this.showActiveFilter = false;
-  }
-  applyPattern(row: Traffic, event?: MouseEvent) {
-    if (event) {
-      this.showPopup(row, event);
-    }
-
-    if (!row.selectedPatternId) {
-      console.warn('⚠ No pattern selected for traffic', row.id);
-      return;
-    }
-
-    const url = `${environment.baseUrl}/signals/apply-current`;
-    const body = {
-      SignId: row.id,
-      LightPatternId: row.selectedPatternId,
-      UseTcp: false,
-    };
-
-    this.signalR.messages$
-      .pipe(
-        takeUntil(this.destroy$),
-        map((m) => this.parseIncoming(m?.message)),
-        filter(
-          (a): a is { id: number; L1: 'R' | 'G' | 'Y'; L2: 'R' | 'G' | 'Y' } =>
-            !!a && a.id === row.id
-        ),
-        take(1),
-        timeout({ first: 8000 }),
-        catchError(() => of(null))
-      )
-      .subscribe(() => {
-        console.log(
-          ` Pattern ${row.selectedPatternId} applied to traffic ${row.id}`
-        );
-      });
-
-    this.http.post<any>(url, body).subscribe({
-      next: (res) => console.log(' Apply success', res),
-      error: (err) => console.error(' Apply error', err),
-    });
   }
 }
