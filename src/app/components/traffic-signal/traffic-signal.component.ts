@@ -1,7 +1,14 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject, of } from 'rxjs';
-import { filter, map, take, timeout, catchError, takeUntil } from 'rxjs/operators';
+import {
+  filter,
+  map,
+  take,
+  timeout,
+  catchError,
+  takeUntil,
+} from 'rxjs/operators';
 import { SignalRServiceService } from 'src/app/services/SignalR/signal-rservice.service';
 import { environment } from 'src/environments/environment';
 
@@ -65,7 +72,10 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private signalR: SignalRServiceService, private http: HttpClient) {}
+  constructor(
+    private signalR: SignalRServiceService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
     // جدول
@@ -88,11 +98,13 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
 
     // استقبال الرسائل العامة
     this.signalR.messages$
-      .pipe(takeUntil(this.destroy$), map((m) => this.parseIncoming(m?.message)))
+      .pipe(
+        takeUntil(this.destroy$),
+        map((m) => this.parseIncoming(m?.message))
+      )
       .subscribe((action) => {
-       
         if (!action) return;
-        console.log(action)
+        console.log(action);
         // حدّث الصف
         const t = this.traffics.find((x) => x.id === action.id);
         if (t) {
@@ -159,14 +171,25 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
   }
 
   // Parse رسالة SignalR
-  private parseIncoming(raw?: string):
-    | { id: number; L1: 'R' | 'G' | 'Y'; L2: 'R' | 'G' | 'Y'; T1?: number; T2?: number }
-    | null {
+  private parseIncoming(
+    raw?: string
+  ): {
+    id: number;
+    L1: 'R' | 'G' | 'Y';
+    L2: 'R' | 'G' | 'Y';
+    T1?: number;
+    T2?: number;
+  } | null {
     if (!raw) return null;
     try {
       const obj = JSON.parse(raw);
       const id = Number(
-        obj.id ?? obj.ID ?? obj.signId ?? obj.SignId ?? obj.signedId ?? obj.SignedId
+        obj.id ??
+          obj.ID ??
+          obj.signId ??
+          obj.SignId ??
+          obj.signedId ??
+          obj.SignedId
       );
       const L1 = (obj.L1 ?? obj.status1 ?? obj.status) as 'R' | 'G' | 'Y';
       const L2 = (obj.L2 ?? obj.status2) as 'R' | 'G' | 'Y';
@@ -232,8 +255,10 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
     if (this.popupDisconnected) return;
     if (!this.popupData || this.countingForId !== this.popupData.id) return;
 
-    let t1 = typeof this.popupData.T1 === 'number' ? this.popupData.T1! : undefined;
-    let t2 = typeof this.popupData.T2 === 'number' ? this.popupData.T2! : undefined;
+    let t1 =
+      typeof this.popupData.T1 === 'number' ? this.popupData.T1! : undefined;
+    let t2 =
+      typeof this.popupData.T2 === 'number' ? this.popupData.T2! : undefined;
 
     // لو مفيش أي مؤقّت، مفيش داعي للتشغيل
     if ((t1 ?? 0) <= 0 && (t2 ?? 0) <= 0) return;
@@ -266,19 +291,21 @@ export class TrafficSignalComponent implements OnInit, OnDestroy {
   }
 
   // Helpers
-  mapSignalColor(color: 'R' | 'G' | 'Y' | undefined): 'RED' | 'GREEN' | 'YELLOW' {
+  mapSignalColor(
+    color: 'R' | 'G' | 'Y' | undefined
+  ): 'RED' | 'GREEN' | 'YELLOW' {
     return color === 'G' ? 'GREEN' : color === 'Y' ? 'YELLOW' : 'RED';
   }
 
-getEmoji(c: 'RED' | 'GREEN' | 'YELLOW') {
-  // 🔴 U+1F534, 🟢 U+1F7E2, 🟡 U+1F7E1
-  const map: Record<'RED'|'GREEN'|'YELLOW', string> = {
-    RED: '\u{1F534}',    // 🔴
-    GREEN: '\u{1F7E2}',  // 🟢
-    YELLOW: '\u{1F7E1}', // 🟡
-  };
-  return map[c];
-}
+  getEmoji(c: 'RED' | 'GREEN' | 'YELLOW') {
+    // 🔴 U+1F534, 🟢 U+1F7E2, 🟡 U+1F7E1
+    const map: Record<'RED' | 'GREEN' | 'YELLOW', string> = {
+      RED: '\u{1F534}', // 🔴
+      GREEN: '\u{1F7E2}', // 🟢
+      YELLOW: '\u{1F7E1}', // 🟡
+    };
+    return map[c];
+  }
   get filteredTraffics(): Traffic[] {
     return this.traffics.filter((t) => {
       const matchesSearch =
@@ -320,14 +347,16 @@ getEmoji(c: 'RED' | 'GREEN' | 'YELLOW') {
   }
 
   get someStatusSelected() {
-    return Object.values(this.statusFilter).some((v) => v) && !this.allStatusSelected;
+    return (
+      Object.values(this.statusFilter).some((v) => v) && !this.allStatusSelected
+    );
   }
 
   toggleAllStatusFilters() {
     const all = this.allStatusSelected;
-    (Object.keys(this.statusFilter) as Array<'RED' | 'GREEN' | 'YELLOW'>).forEach(
-      (k) => (this.statusFilter[k] = !all)
-    );
+    (
+      Object.keys(this.statusFilter) as Array<'RED' | 'GREEN' | 'YELLOW'>
+    ).forEach((k) => (this.statusFilter[k] = !all));
   }
 
   toggleStatusFilterDropdown() {
@@ -343,7 +372,9 @@ getEmoji(c: 'RED' | 'GREEN' | 'YELLOW') {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (!target.closest('.status-filter-dropdown')) this.showStatusFilter = false;
-    if (!target.closest('.active-filter-dropdown')) this.showActiveFilter = false;
+    if (!target.closest('.status-filter-dropdown'))
+      this.showStatusFilter = false;
+    if (!target.closest('.active-filter-dropdown'))
+      this.showActiveFilter = false;
   }
 }

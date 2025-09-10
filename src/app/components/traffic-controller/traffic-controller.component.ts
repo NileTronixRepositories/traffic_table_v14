@@ -12,7 +12,13 @@ import {
 import { SignalRServiceService } from 'src/app/services/SignalR/signal-rservice.service';
 import { environment } from 'src/environments/environment';
 import { Pattern } from 'src/app/model/pattern';
-
+interface PatternVm {
+  id: number;
+  name: string;
+  green: number;
+  amber: number;
+  red: number;
+}
 export interface Traffic {
   id: number;
   ipAddress?: string;
@@ -87,8 +93,21 @@ export class TrafficControllerComponent implements OnInit {
       });
 
     this.http
-      .get<Pattern[]>(`${environment.baseUrl}/api/patterns`)
-      .subscribe((res) => (this.patterns = res));
+      .get<Pattern[]>(`${environment.baseUrl}/api/Pattern/list`)
+      .subscribe({
+        next: (res) => {
+          this.patterns = (res ?? []).map((p) => ({
+            ...p,
+            ID: Number(p.ID ?? 0),
+            Name: String(p.Name ?? ''),
+            RedDuration: Number(p.RedDuration ?? p.RedDuration ?? 0),
+            AmberDuration: Number(p.AmberDuration ?? p.AmberDuration ?? 0),
+            GreenDuration: Number(p.GreenDuration ?? p.GreenDuration ?? 0),
+          }));
+        },
+        error: (err) => console.error(' Error loading patterns', err),
+      });
+
     this.signalR
       .getControlBoxes()
       .pipe(takeUntil(this.destroy$))
@@ -231,7 +250,7 @@ export class TrafficControllerComponent implements OnInit {
     this.popupData = traffic;
     this.popupVisible = true;
     this.updatePopupPosition(event);
-    this.stopCounters(); // لا تبدأ عدّادين عند الفتح
+    this.stopCounters();
   }
 
   hidePopup() {
@@ -389,43 +408,39 @@ export class TrafficControllerComponent implements OnInit {
       this.showPopup(row, event);
     }
 
+    if (!row.selectedPatternId) {
+      console.warn('⚠ No pattern selected for traffic', row.id);
+      return;
+    }
+
     const url = `${environment.baseUrl}/signals/apply-current`;
-    const body: any = {
+    const body = {
       SignId: row.id,
+      LightPatternId: row.selectedPatternId,
       UseTcp: false,
     };
-
-    if (row.selectedPatternId) {
-      body.LightPatternId = row.selectedPatternId;
-      body.UseTcp = false;
-    }
 
     this.signalR.messages$
       .pipe(
         takeUntil(this.destroy$),
         map((m) => this.parseIncoming(m?.message)),
         filter(
-          (
-            a
-          ): a is {
-            id: number;
-            L1: 'R' | 'G' | 'Y';
-            L2: 'R' | 'G' | 'Y';
-            T1?: number;
-            T2?: number;
-          } => !!a && a.id === row.id
+          (a): a is { id: number; L1: 'R' | 'G' | 'Y'; L2: 'R' | 'G' | 'Y' } =>
+            !!a && a.id === row.id
         ),
         take(1),
         timeout({ first: 8000 }),
         catchError(() => of(null))
       )
-      .subscribe(() => {});
-
-    this.http
-      .post<any>(`${environment.baseUrl}/signals/apply-current`, body)
-      .subscribe({
-        next: (res) => console.log('  Apply success', res),
-        error: (err) => console.error('  Apply error', err),
+      .subscribe(() => {
+        console.log(
+          ` Pattern ${row.selectedPatternId} applied to traffic ${row.id}`
+        );
       });
+
+    this.http.post<any>(url, body).subscribe({
+      next: (res) => console.log(' Apply success', res),
+      error: (err) => console.error(' Apply error', err),
+    });
   }
 }

@@ -92,11 +92,13 @@
         <td>
           <div class="d-flex align-items-center gap-2">
             <select
+              class="form-select"
               [(ngModel)]="traffic.selectedPatternId"
-              class="form-select form-select-sm"
+              (ngModelChange)="applyPattern(traffic, $event)"
             >
-              <option *ngFor="let pat of patterns" [ngValue]="pat.ID">
-                {{ pat.Name }}
+              <option [ngValue]="null">-- Select Pattern --</option>
+              <option *ngFor="let p of patterns" [ngValue]="p.ID">
+                {{ p.Name }}
               </option>
             </select>
 
