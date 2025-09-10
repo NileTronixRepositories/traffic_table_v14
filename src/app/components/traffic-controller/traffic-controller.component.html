@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="header">
-    <h1 class="title">Traffic Controller</h1>
+    <h1 class="title">Traffic Signal Management</h1>
 
     <div class="search-container">
       <div class="search-box">
@@ -81,38 +81,71 @@
         <th>ID</th>
         <th>IpAddress</th>
         <th>Name</th>
+        <th>Active</th>
         <th>Pattern</th>
+        <th>Apply</th>
+        <!-- <th>Current</th> -->
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let traffic of paginatedTraffics">
+      <tr
+        *ngFor="let traffic of paginatedTraffics; "
+        (mouseenter)="showPopup(traffic, $event)"
+        (mousemove)="movePopup($event)"
+        (mouseleave)="hidePopup()"
+      >
         <td>{{ traffic.id }}</td>
         <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
         <td>
-          <div class="d-flex align-items-center gap-2">
-            <select
-              class="form-select"
-              [(ngModel)]="traffic.selectedPatternId"
-              (ngModelChange)="applyPattern(traffic, $event)"
-            >
-              <option [ngValue]="null">-- Select Pattern --</option>
-              <option *ngFor="let p of patterns" [ngValue]="p.ID">
-                {{ p.Name }}
-              </option>
-            </select>
-
-            <button
-              class="btn btn-sm btn-primary"
-              (click)="applyPattern(traffic)"
-            >
-              Apply
-            </button>
-          </div>
+          <span [ngClass]="traffic.active ? 'active' : 'inactive'">
+            {{ traffic.active ? activeLabel : inactiveLabel }}
+          </span>
         </td>
+
+        <!-- Pattern column (الاسم فقط) -->
+        <td class="pattern-cell">
+          <select
+            [(ngModel)]="selectedPatternId[traffic.id]"
+            (ngModelChange)="onPatternSelected(traffic, $event)"
+            [disabled]="isLoadingPatterns || !patterns.length"
+          >
+            <option [ngValue]="null" disabled>
+              {{
+                isLoadingPatterns
+                  ? "Loading..."
+                  : patternLoadError
+                  ? "Failed - refresh"
+                  : "Choose..."
+              }}
+            </option>
+            <option *ngFor="let p of patterns" [ngValue]="p.id">
+              {{ p.name }}
+            </option>
+          </select>
+        </td>
+
+        <!-- Apply column -->
+        <td class="apply-cell">
+          <button
+            class="btn btn-success"
+            (click)="applySelected(traffic)"
+            [disabled]="selectedPatternId[traffic.id] == null"
+            title="Apply selected pattern to this signal"
+          >
+            Apply
+          </button>
+        </td>
+
+        <!-- <td>
+          <button class="btn btn-success" (click)="applyCurrent(traffic, $event)">
+            Apply (old)
+          </button>
+        </td> -->
       </tr>
+
       <tr *ngIf="paginatedTraffics.length === 0">
-        <td colspan="4" class="no-results">
+        <td colspan="6" class="no-results">
           No traffic signals found matching your criteria
         </td>
       </tr>
@@ -125,7 +158,6 @@
     *ngIf="popupVisible"
     [ngStyle]="{ top: popupY + 'px', left: popupX + 'px' }"
   >
-    <!-- Header -->
     <div class="tp-header">
       <div class="tp-title">
         <span
@@ -140,7 +172,6 @@
       </span>
     </div>
 
-    <!-- Coordinates -->
     <div class="tp-meta">
       <div class="tp-meta__item">
         <i class="tp-ico">📍</i>
@@ -153,9 +184,7 @@
       </div>
     </div>
 
-    <!-- Grid -->
     <div class="tp-grid">
-      <!-- L1 -->
       <div class="tp-col">
         <div class="tp-col__head">
           <span class="tp-col__label">L1</span>
@@ -192,7 +221,6 @@
         </div>
       </div>
 
-      <!-- L2 -->
       <div class="tp-col">
         <div class="tp-col__head">
           <span class="tp-col__label">L2</span>
