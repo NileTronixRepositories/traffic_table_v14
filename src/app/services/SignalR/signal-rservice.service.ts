@@ -41,6 +41,7 @@ export class SignalRServiceService {
           L1: 'R' as 'R' | 'G' | 'Y',
           L2: 'R' as 'R' | 'G' | 'Y',
           T: 0,
+          LightPatternId : item.LightPatternId
         }))
       )
     );

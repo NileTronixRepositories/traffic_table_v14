@@ -25,6 +25,7 @@ export interface Traffic {
   T?: number;
   Latitude?: string | null;
   Longitude?: string | null;
+  LightPatternId: number;
 }
 
 export interface PatternDto {
@@ -38,6 +39,7 @@ export interface PatternDto {
   ShowPedstrainCounter?: boolean;
   SignTemplates?: any;
 }
+
 export interface Pattern {
   id: number;
   name: string;
@@ -49,20 +51,21 @@ export interface Pattern {
   showPedstrainCounter?: boolean;
   signTemplates?: any;
 }
+
 @Component({
   selector: 'app-traffic-controller',
   templateUrl: './traffic-controller.component.html',
   styleUrls: ['./traffic-controller.component.css'],
 })
-export class TrafficControllerComponent implements OnInit { 
-traffics: Traffic[] = [];
+export class TrafficControllerComponent implements OnInit, OnDestroy {
+  traffics: Traffic[] = [];
   searchTerm = '';
   pageSize = 10;
   currentPage = 1;
 
   // Patterns
   patterns: Pattern[] = [];
-  /** يحتفظ بـ id لكل صف */
+  /** يحتفظ بالـ patternId المختار لكل صف (key = traffic.id) */
   selectedPatternId: Record<number, number | null> = {};
   isLoadingPatterns = false;
   patternLoadError = '';
@@ -104,18 +107,21 @@ traffics: Traffic[] = [];
   ) {}
 
   ngOnInit() {
-    // 1) Load Patterns
+    // 1) Load Patterns (قد توصل قبل/بعد الـ traffics — الكود آمن للحالتين)
     this.loadPatterns();
 
-    // 2) Load table
+    // 2) Load table (control boxes)
     this.signalR
       .getControlBoxes()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         this.traffics = data;
+
+        // اضبط القيمة الافتراضية لكل صف من LightPatternId لو مفيش اختيار سابق
         for (const t of data) {
           if (this.selectedPatternId[t.id] === undefined) {
-            this.selectedPatternId[t.id] = null;
+            const lp = Number(t.LightPatternId);
+            this.selectedPatternId[t.id] = Number.isFinite(lp) ? lp : null;
           }
         }
       });
@@ -195,50 +201,47 @@ traffics: Traffic[] = [];
       .subscribe((list) => {
         this.patterns = list;
         this.isLoadingPatterns = false;
+        // مفيش لزوم نعمل re-map للـ selectedPatternId هنا — Angular هيطابق بالأرقام تلقائيًا
       });
   }
 
   onPatternSelected(row: Traffic, patternId: number | null) {
-    // مجرد حفظ الـ id؛ العرض في الـ select هو الاسم فقط
     this.selectedPatternId[row.id] = patternId ?? null;
+    if (patternId != null) row.LightPatternId = patternId; // تحديث محلي اختياري
   }
 
   // ---------- Apply (POST /signals/apply-current) ----------
-  /** يرسل فقط الحقول غير الـ null/undefined */
-private compact<T extends object>(obj: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const k of Object.keys(obj) as (keyof T)[]) {
-    const v = obj[k];
-    if (v !== null && v !== undefined) {
-      out[k] = v; // متوافق نوعيًا مع Partial<T>
+  /** يرسل فقط الحقول غير null/undefined */
+  private compact<T extends object>(obj: T): Partial<T> {
+    const out: Partial<T> = {};
+    for (const k of Object.keys(obj) as (keyof T)[]) {
+      const v = obj[k];
+      if (v !== null && v !== undefined) out[k] = v;
     }
+    return out;
   }
-  return out;
-}
 
   applySelected(row: Traffic) {
     const url = `${environment.baseUrl}/signals/apply-current`;
     const lightPatternId = this.selectedPatternId[row.id] ?? undefined;
 
     const req = this.compact({
-      // سيأخذ أيًا مما هو متاح
       SignId: row.id ?? undefined,
       Ip: row.ipAddress ?? undefined,
       LightPatternId: lightPatternId,
-      // باقي الفيلدز تترك فارغة (لن تُرسل)
-      // UseTcp: undefined,
-      // TcpPort: undefined,
-      // BlinkMs: undefined,
-      // BlinkRed: undefined,
-      // BlinkAmber: undefined,
-      // BlinkGreen: undefined,
-      // ChangeMain: undefined,
-      // DeviceId: undefined,
     });
 
     this.http.post(url, req).subscribe({
-      next: (res) => console.log('ApplyCurrent success', res),
-      error: (err) => console.error('ApplyCurrent error', err),
+      next: (res)=> {
+
+        console.log('ApplyCurrent success', res)
+        alert("Apply  Successfully")
+      } ,
+      error: (err) => {
+console.error('ApplyCurrent error', err),
+alert("Apply Current Error")
+
+      }
     });
   }
 
@@ -271,8 +274,8 @@ private compact<T extends object>(obj: T): Partial<T> {
       .subscribe(() => {});
 
     this.http.post<any>(url, body).subscribe({
-      next: (res) => console.log(':white_tick: POST Success', res),
-      error: (err) => console.error(':x: POST Error', err),
+      next: (res) => console.log('POST Success', res),
+      error: (err) => console.error('POST Error', err),
     });
   }
 

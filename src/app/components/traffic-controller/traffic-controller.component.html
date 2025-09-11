@@ -10,6 +10,7 @@
           class="search-input"
           placeholder="Search by name or ID..."
           [(ngModel)]="searchTerm"
+          [ngModelOptions]="{ standalone: true }"
         />
       </div>
 
@@ -95,20 +96,24 @@
         <td>{{ traffic.id }}</td>
         <td>{{ traffic.ipAddress }}</td>
         <td>{{ traffic.name }}</td>
-        <!-- <td>
-          <span [ngClass]="traffic.active ? 'active' : 'inactive'">
-            {{ traffic.active ? activeLabel : inactiveLabel }}
-          </span>
-        </td> -->
-        <!-- Pattern column (الاسم فقط) -->
+
+        <!-- Pattern column (اختيار افتراضي من LightPatternId) -->
         <td class="pattern-cell">
           <select
             class="form-select custom-select"
             [(ngModel)]="selectedPatternId[traffic.id]"
             (ngModelChange)="onPatternSelected(traffic, $event)"
             [disabled]="isLoadingPatterns || !patterns.length"
+            [ngModelOptions]="{ standalone: true }"
+            title="Choose a pattern for this signal"
           >
-            <option [ngValue]="null" disabled>
+            <!-- يظهر فقط لو مفيش قيمة مختارة -->
+            <option
+              *ngIf="selectedPatternId[traffic.id] == null"
+              [ngValue]="null"
+              disabled
+              selected
+            >
               {{
                 isLoadingPatterns
                   ? "Loading..."
@@ -117,11 +122,14 @@
                   : "Choose..."
               }}
             </option>
+
+            <!-- القائمة الفعلية -->
             <option *ngFor="let p of patterns" [ngValue]="p.id">
               {{ p.name }}
             </option>
           </select>
         </td>
+
         <!-- Apply column -->
         <td class="apply-cell">
           <button
@@ -133,8 +141,8 @@
             Apply
           </button>
         </td>
-        <!-- <td> <button class="btn btn-success" (click)="applyCurrent(traffic, $event)"> Apply (old) </button> </td> -->
       </tr>
+
       <tr *ngIf="paginatedTraffics.length === 0">
         <td colspan="6" class="no-results">
           No traffic signals found matching your criteria
