@@ -99,7 +99,7 @@ export class TemplateComponent implements OnInit {
         10,
         [Validators.required, Validators.min(0), Validators.max(1000)],
       ],
-      red: [{ value: 30, disabled: true }, [Validators.required]],
+red: [30, [Validators.required]],
     });
   }
 
@@ -266,7 +266,8 @@ export class TemplateComponent implements OnInit {
     this.errorMsg = '';
 
     const v = this.patternForm.value;
-    const id = Number(v.id ?? 0);
+    const id = Number(v.id ?? 0); 
+    console.log(v)
 
     if (id === 0) {
       const params = new HttpParams()
